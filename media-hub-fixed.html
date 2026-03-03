@@ -1,0 +1,1637 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Build Zone Library</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0a0f;--surface:#12121a;--surface2:#1a1a28;--border:rgba(255,255,255,0.06);
+  --yt:#ff2d55;--sc:#00e5ff;--sm:#a855f7;--so:#34d399;--vip:#f59e0b;
+  --text:#f0f0f5;--muted:#6b6b85;
+}
+body{font-family:'Syne',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+.bg-grid{position:fixed;inset:0;z-index:0;background-image:linear-gradient(rgba(255,255,255,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.02) 1px,transparent 1px);background-size:60px 60px}
+.bg-glow{position:fixed;inset:0;z-index:0;background:radial-gradient(ellipse 60% 50% at 50% 0%,rgba(168,85,247,0.1) 0%,transparent 70%);pointer-events:none}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.4)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+@keyframes msgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* MSG DELETE */
+.msg-row{position:relative}
+.msg-del-btn{position:absolute;opacity:0;pointer-events:none;width:22px;height:22px;border-radius:6px;background:rgba(255,45,85,0.15);border:1px solid rgba(255,45,85,0.3);color:#ff6b86;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0;top:22px}
+.msg-row:hover .msg-del-btn{opacity:1;pointer-events:all}
+.msg-row.mine .msg-del-btn{right:calc(100% + 6px)}
+.msg-row:not(.mine) .msg-del-btn{left:calc(100% + 6px)}
+.msg-deleted{font-style:italic;color:var(--muted);font-size:11px;opacity:.6}
+
+/* VIP TANYA */
+.tanya-ask-box{background:var(--surface);border:1px solid rgba(245,158,11,0.2);border-radius:16px;padding:18px;margin-bottom:16px}
+.tanya-ask-box h3{font-size:13px;font-weight:800;margin-bottom:12px;color:var(--vip)}
+.tanya-input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px 14px;color:var(--text);font-family:'Syne',sans-serif;font-size:13px;outline:none;resize:none;min-height:80px;transition:border .2s}
+.tanya-input:focus{border-color:rgba(245,158,11,0.4)}
+.tanya-input::placeholder{color:var(--muted)}
+.btn-tanya-kirim{margin-top:10px;padding:10px 20px;background:linear-gradient(135deg,#f59e0b,#d97706);border:none;border-radius:10px;color:#000;font-family:'Syne',sans-serif;font-size:13px;font-weight:800;cursor:pointer;transition:all .2s}
+.btn-tanya-kirim:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(245,158,11,0.35)}
+.tanya-section-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.tanya-section-hdr h3{font-size:11px;font-weight:800;color:var(--muted);font-family:'Space Mono',monospace;letter-spacing:1px;text-transform:uppercase}
+.tanya-list{display:flex;flex-direction:column;gap:12px}
+.tanya-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;animation:fadeUp .3s ease}
+.tanya-card:hover{border-color:rgba(245,158,11,0.2)}
+.tanya-q{padding:14px 16px;border-bottom:1px solid var(--border)}
+.tanya-q-header{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.tanya-q-av{width:28px;height:28px;border-radius:7px;background:linear-gradient(135deg,#f59e0b,#d97706);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#000;overflow:hidden;flex-shrink:0}
+.tanya-q-av img{width:100%;height:100%;object-fit:cover}
+.tanya-q-name{font-size:11px;font-weight:800;color:var(--vip)}
+.tanya-q-time{font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);margin-left:auto}
+.tanya-q-del{width:22px;height:22px;border-radius:6px;background:transparent;border:1px solid rgba(255,45,85,0.2);color:#ff6b86;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0;margin-left:4px}
+.tanya-q-del:hover{background:rgba(255,45,85,0.15)}
+.tanya-q-text{font-size:13px;line-height:1.5}
+.tanya-answers{padding:12px 16px;display:flex;flex-direction:column;gap:10px;background:rgba(255,255,255,0.01)}
+.tanya-answer{display:flex;gap:8px;align-items:flex-start}
+.tanya-ans-av{width:26px;height:26px;border-radius:6px;background:linear-gradient(135deg,#a855f7,#00e5ff);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;overflow:hidden;flex-shrink:0}
+.tanya-ans-av img{width:100%;height:100%;object-fit:cover}
+.tanya-ans-body{flex:1;min-width:0}
+.tanya-ans-meta{display:flex;align-items:center;gap:5px;margin-bottom:4px;flex-wrap:wrap}
+.tanya-ans-name{font-size:11px;font-weight:800}
+.tanya-ans-badge{font-family:'Space Mono',monospace;font-size:9px;padding:2px 6px;border-radius:4px}
+.tanya-ans-badge.admin{background:rgba(168,85,247,0.15);color:var(--sm)}
+.tanya-ans-badge.vip{background:rgba(245,158,11,0.12);color:var(--vip)}
+.tanya-ans-time{font-family:'Space Mono',monospace;font-size:9px;color:var(--muted)}
+.tanya-ans-text{font-size:12px;color:var(--text);line-height:1.5;background:var(--surface2);border-radius:8px 8px 8px 2px;padding:8px 10px;word-break:break-word}
+.tanya-ans-del{width:20px;height:20px;border-radius:5px;background:transparent;border:1px solid rgba(255,45,85,0.15);color:#ff6b86;cursor:pointer;font-size:10px;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
+.tanya-ans-del:hover{background:rgba(255,45,85,0.12)}
+.tanya-reply-box{padding:10px 16px 14px;border-top:1px solid var(--border);display:flex;gap:8px}
+.tanya-reply-input{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:9px 12px;color:var(--text);font-family:'Syne',sans-serif;font-size:12px;outline:none;transition:border .2s}
+.tanya-reply-input:focus{border-color:rgba(245,158,11,0.4)}
+.tanya-reply-input::placeholder{color:var(--muted)}
+.btn-reply{padding:9px 14px;background:linear-gradient(135deg,#f59e0b,#d97706);border:none;border-radius:9px;color:#000;font-family:'Syne',sans-serif;font-size:12px;font-weight:800;cursor:pointer;transition:all .2s;white-space:nowrap}
+.btn-reply:hover{filter:brightness(1.1)}
+.tanya-empty{text-align:center;padding:50px 24px;color:var(--muted)}
+.tanya-empty .e-ico{font-size:40px;margin-bottom:12px;opacity:.4}
+
+
+/* ===== LOGIN ===== */
+#login-screen{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:24px;background:var(--bg)}
+#login-screen.hidden{display:none}
+.login-box{width:100%;max-width:420px;background:var(--surface);border:1px solid rgba(168,85,247,0.2);border-radius:24px;padding:36px 32px 28px;box-shadow:0 0 80px rgba(168,85,247,0.1),0 40px 80px rgba(0,0,0,0.5);animation:fadeUp .4s ease}
+.login-logo{text-align:center;margin-bottom:24px}
+.login-logo-icon{width:60px;height:60px;margin:0 auto 12px;background:linear-gradient(135deg,rgba(168,85,247,0.3),rgba(0,229,255,0.2));border:1px solid rgba(168,85,247,0.4);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:28px}
+.login-title{font-size:20px;font-weight:800;letter-spacing:-.5px}
+.login-title em{font-style:normal;background:linear-gradient(135deg,#a855f7,#00e5ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.login-sub{font-size:13px;color:var(--muted);margin-top:5px}
+.role-toggle{display:flex;gap:4px;background:var(--surface2);border-radius:12px;padding:4px;margin-bottom:20px}
+.role-btn{flex:1;padding:8px 6px;border:none;border-radius:9px;cursor:pointer;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:var(--muted);background:transparent;transition:all .2s;white-space:nowrap}
+.role-btn.active{background:rgba(168,85,247,0.2);color:var(--sm);border:1px solid rgba(168,85,247,0.3)}
+.role-btn.vip-btn.active{background:rgba(245,158,11,0.15);color:var(--vip);border:1px solid rgba(245,158,11,0.3)}
+.l-fields{display:flex;flex-direction:column;gap:10px;margin-bottom:14px}
+.l-wrap{position:relative}
+.l-wrap .l-ico{position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:15px}
+.l-input{width:100%;padding:12px 13px 12px 40px;background:var(--surface2);border:1px solid var(--border);border-radius:11px;color:var(--text);font-family:'Syne',sans-serif;font-size:14px;outline:none;transition:border .2s}
+.l-input:focus{border-color:rgba(168,85,247,0.5)}
+.l-input::placeholder{color:var(--muted)}
+.l-err{background:rgba(255,45,85,0.1);border:1px solid rgba(255,45,85,0.3);border-radius:9px;padding:9px 13px;font-size:13px;color:#ff6b86;display:none;margin-bottom:10px;text-align:center}
+.l-err.show{display:block;animation:shake .3s ease}
+.btn-login{width:100%;padding:13px;background:linear-gradient(135deg,#a855f7,#7c3aed);border:none;border-radius:11px;color:#fff;font-family:'Syne',sans-serif;font-size:14px;font-weight:800;cursor:pointer;transition:all .2s;margin-bottom:10px}
+.btn-login:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(168,85,247,0.35)}
+.btn-login.vip-login-btn{background:linear-gradient(135deg,#f59e0b,#d97706)}
+.btn-login.vip-login-btn:hover{box-shadow:0 8px 24px rgba(245,158,11,0.35)}
+.l-divider{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.l-divider span{flex:1;height:1px;background:var(--border)}
+.l-divider p{font-size:10px;color:var(--muted);font-family:'Space Mono',monospace}
+.btn-skip{width:100%;padding:11px;background:transparent;border:1px solid var(--border);border-radius:11px;color:var(--muted);font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s}
+.btn-skip:hover{color:var(--text);border-color:rgba(255,255,255,0.15)}
+
+/* ===== MAIN APP ===== */
+.app{position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:36px 24px 80px;display:none}
+.app.visible{display:block}
+header{text-align:center;margin-bottom:24px}
+.logo-badge{display:inline-flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:100px;padding:5px 14px;margin-bottom:16px;font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase}
+.logo-badge span{width:6px;height:6px;background:var(--so);border-radius:50%;animation:pulse 2s infinite}
+h1{font-size:clamp(28px,5vw,52px);font-weight:800;line-height:1.05;letter-spacing:-2px}
+h1 em{font-style:normal;background:linear-gradient(135deg,#a855f7,#00e5ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.sub{color:var(--muted);font-size:14px;margin-top:8px}
+
+/* USER BAR */
+.user-bar{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:10px 16px;margin-bottom:20px;animation:fadeUp .3s ease}
+.user-bar.is-admin{border-color:rgba(168,85,247,0.25)}
+.user-bar.is-vip{border-color:rgba(245,158,11,0.25)}
+.user-bar.is-owner{border-color:rgba(168,85,247,0.4)}
+.ubar-av{width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,#a855f7,#00e5ff);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff;flex-shrink:0;overflow:hidden}
+.ubar-av img{width:100%;height:100%;object-fit:cover}
+.ubar-av.vip-av{background:linear-gradient(135deg,#f59e0b,#d97706)}
+.ubar-av.guest-av{background:var(--surface2);color:var(--muted)}
+.ubar-info{flex:1;min-width:0}
+.ubar-name{font-size:13px;font-weight:800}
+.ubar-role{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);margin-top:2px}
+.ubar-actions{display:flex;gap:8px;align-items:center;flex-shrink:0}
+.ubar-badge{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;background:rgba(168,85,247,0.1);border:1px solid rgba(168,85,247,0.25);border-radius:8px;color:var(--sm);font-size:11px;font-weight:700;cursor:pointer;transition:all .2s}
+.ubar-badge:hover{background:rgba(168,85,247,0.2)}
+.btn-logout{padding:6px 13px;background:transparent;border:1px solid var(--border);border-radius:8px;color:var(--muted);font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s}
+.btn-logout:hover{color:var(--yt);border-color:rgba(255,45,85,0.3)}
+
+/* TEAM SECTION */
+.team-section{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px;margin-bottom:20px;animation:fadeUp .4s ease}
+.team-hdr{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.team-hdr-ico{width:34px;height:34px;border-radius:9px;background:rgba(168,85,247,0.12);display:flex;align-items:center;justify-content:center;font-size:16px}
+.team-hdr .t1{font-size:13px;font-weight:800}
+.team-hdr .t2{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);margin-top:1px}
+.team-grid{display:flex;flex-wrap:wrap;gap:8px}
+.team-card{display:flex;align-items:center;gap:10px;background:var(--surface2);border:1px solid var(--border);border-radius:11px;padding:10px 14px;flex:1;min-width:140px;transition:all .2s}
+.team-card:hover{border-color:rgba(168,85,247,0.3);transform:translateY(-2px)}
+.team-av{width:40px;height:40px;border-radius:10px;flex-shrink:0;background:linear-gradient(135deg,#a855f7,#00e5ff);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff;overflow:hidden;border:2px solid rgba(168,85,247,0.2)}
+.team-av img{width:100%;height:100%;object-fit:cover}
+.team-av.vip-av{background:linear-gradient(135deg,#f59e0b,#d97706);border-color:rgba(245,158,11,0.3)}
+.team-info .tn{font-size:12px;font-weight:800}
+.team-info .tr{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);margin-top:2px}
+.team-dot{width:7px;height:7px;background:var(--so);border-radius:50%;margin-left:auto;flex-shrink:0;box-shadow:0 0 6px var(--so);animation:pulse 2s infinite}
+
+/* TABS */
+.tab-nav{display:flex;gap:4px;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:5px;margin-bottom:28px;overflow-x:auto;scrollbar-width:none}
+.tab-nav::-webkit-scrollbar{display:none}
+.tab-btn{flex:1;min-width:110px;display:flex;align-items:center;gap:6px;padding:11px 12px;border:none;border-radius:12px;cursor:pointer;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:var(--muted);background:transparent;transition:all .25s;white-space:nowrap;justify-content:center}
+.tab-btn:hover{color:var(--text);background:var(--surface2)}
+.tab-btn[data-tab="youtube"].active{background:rgba(255,45,85,0.15);border:1px solid rgba(255,45,85,0.3);color:var(--yt)}
+.tab-btn[data-tab="script"].active{background:rgba(0,229,255,0.1);border:1px solid rgba(0,229,255,0.25);color:var(--sc)}
+.tab-btn[data-tab="summit"].active{background:rgba(168,85,247,0.12);border:1px solid rgba(168,85,247,0.3);color:var(--sm)}
+.tab-btn[data-tab="social"].active{background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.25);color:var(--so)}
+.tab-btn[data-tab="viproom"].active{background:linear-gradient(135deg,rgba(245,158,11,0.2),rgba(168,85,247,0.15));border:1px solid rgba(245,158,11,0.4);color:var(--vip)}
+.vip-tab-btn{background:linear-gradient(135deg,rgba(245,158,11,0.08),rgba(168,85,247,0.06));border:1px solid rgba(245,158,11,0.15)!important;color:var(--vip)!important}
+
+/* ===== VIP ROOM ===== */
+@keyframes vipGlow{0%,100%{opacity:.6}50%{opacity:1}}
+.vip-locked-screen{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:400px;text-align:center;padding:40px 24px;overflow:hidden;border-radius:20px;background:linear-gradient(135deg,rgba(245,158,11,0.05),rgba(168,85,247,0.05));border:1px solid rgba(245,158,11,0.15)}
+.vip-locked-glow{position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 50%,rgba(245,158,11,0.08),transparent 70%);pointer-events:none;animation:vipGlow 3s ease infinite}
+.vip-locked-icon{font-size:56px;margin-bottom:16px;filter:drop-shadow(0 0 20px rgba(245,158,11,0.5))}
+.vip-locked-title{font-size:28px;font-weight:800;letter-spacing:-1px;margin-bottom:10px}
+.vip-locked-title span{background:linear-gradient(135deg,#f59e0b,#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.vip-locked-sub{font-size:13px;color:var(--muted);line-height:1.7;max-width:280px;margin-bottom:20px}
+.vip-locked-badge{display:inline-flex;align-items:center;gap:6px;padding:8px 18px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:100px;color:var(--vip);font-size:12px;font-weight:800;font-family:'Space Mono',monospace;letter-spacing:1px}
+
+.vip-hero{position:relative;background:linear-gradient(135deg,rgba(245,158,11,0.12),rgba(168,85,247,0.08));border:1px solid rgba(245,158,11,0.2);border-radius:16px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;overflow:hidden;animation:fadeUp .3s ease}
+.vip-hero-glow{position:absolute;inset:0;background:radial-gradient(ellipse 60% 80% at 0% 50%,rgba(245,158,11,0.1),transparent 60%);pointer-events:none}
+.vip-hero-left{display:flex;align-items:center;gap:12px;position:relative}
+.vip-hero-av{width:48px;height:48px;border-radius:13px;background:linear-gradient(135deg,#f59e0b,#d97706);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:#000;flex-shrink:0;overflow:hidden;border:2px solid rgba(245,158,11,0.4)}
+.vip-hero-av img{width:100%;height:100%;object-fit:cover}
+.vip-hero-name{font-size:16px;font-weight:800;letter-spacing:-.3px}
+.vip-hero-role{font-family:'Space Mono',monospace;font-size:10px;color:var(--vip);margin-top:3px;letter-spacing:1px}
+.vip-hero-badge{padding:6px 14px;background:linear-gradient(135deg,rgba(245,158,11,0.2),rgba(245,158,11,0.05));border:1px solid rgba(245,158,11,0.35);border-radius:100px;font-size:11px;font-weight:800;color:var(--vip);font-family:'Space Mono',monospace;letter-spacing:1px;flex-shrink:0;position:relative}
+
+.vip-banner{border-radius:16px;overflow:hidden;margin-bottom:16px;background:var(--surface);border:1px solid var(--border);min-height:160px;display:flex;align-items:center;justify-content:center}
+.vip-banner img{width:100%;display:block;border-radius:16px}
+.vip-banner-placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;gap:8px;opacity:.6}
+
+.vip-subtab-nav{display:flex;gap:6px;background:var(--surface2);border-radius:14px;padding:6px;margin-bottom:20px;border:1px solid var(--border);overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.vip-subtab-nav::-webkit-scrollbar{display:none}
+.vip-stab{flex:0 0 auto;padding:10px 14px;border:none;border-radius:10px;background:transparent;color:var(--muted);font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .25s;white-space:nowrap}
+.vip-stab:hover{color:var(--text)}
+.vip-stab.active{background:linear-gradient(135deg,rgba(245,158,11,0.2),rgba(245,158,11,0.08));border:1px solid rgba(245,158,11,0.35);color:var(--vip)}
+.vip-stab-panel{display:none;animation:fadeUp .3s ease}
+.vip-stab-panel.active{display:block}
+
+.vip-chat-wrap .chat-layout{height:520px}
+
+.vip-konten-header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.btn-vip-add{display:flex;align-items:center;gap:5px;padding:9px 16px;border:none;border-radius:10px;background:linear-gradient(135deg,#f59e0b,#d97706);color:#000;font-family:'Syne',sans-serif;font-size:12px;font-weight:800;cursor:pointer;transition:all .2s;flex-shrink:0}
+.btn-vip-add:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(245,158,11,0.35)}
+.vip-konten-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;margin-top:4px}
+.vip-konten-card{background:var(--surface);border:1px solid rgba(245,158,11,0.12);border-radius:14px;overflow:hidden;transition:all .25s;animation:fadeUp .3s ease}
+.vip-konten-card:hover{transform:translateY(-3px);border-color:rgba(245,158,11,0.3);box-shadow:0 12px 30px rgba(245,158,11,0.08)}
+.vkc-thumb{width:100%;aspect-ratio:16/9;background:linear-gradient(135deg,rgba(245,158,11,0.1),rgba(168,85,247,0.05));display:flex;align-items:center;justify-content:center;font-size:36px}
+.vkc-body{padding:13px}
+.vkc-tag{display:inline-block;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:3px 7px;border-radius:5px;background:rgba(245,158,11,0.12);color:var(--vip);margin-bottom:7px;font-weight:700}
+.vkc-title{font-size:13px;font-weight:800;margin-bottom:5px}
+.vkc-desc{font-size:11px;color:var(--muted);line-height:1.5}
+.vkc-foot{display:flex;align-items:center;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+.vkc-date{font-family:'Space Mono',monospace;font-size:9px;color:var(--muted)}
+
+.vip-info-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:20px}
+@media(min-width:500px){.vip-info-cards{grid-template-columns:repeat(4,1fr)}}
+.vip-info-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center;transition:all .2s}
+.vip-info-card.gold{border-color:rgba(245,158,11,0.2);background:linear-gradient(135deg,rgba(245,158,11,0.07),transparent)}
+.vip-info-card.purple{border-color:rgba(168,85,247,0.2);background:linear-gradient(135deg,rgba(168,85,247,0.07),transparent)}
+.vip-info-card.teal{border-color:rgba(52,211,153,0.2);background:linear-gradient(135deg,rgba(52,211,153,0.07),transparent)}
+.vip-info-card.amber{border-color:rgba(251,191,36,0.2);background:linear-gradient(135deg,rgba(251,191,36,0.07),transparent)}
+.vic-icon{font-size:22px;margin-bottom:6px}
+.vic-title{font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+.vic-val{font-size:22px;font-weight:800}
+.vip-member-list-wrap .admin-item{border-color:rgba(245,158,11,0.12)}
+.vip-member-list-wrap .admin-item-av{background:linear-gradient(135deg,#f59e0b,#d97706);color:#000}
+
+.tab-btn .vip-lock{font-size:10px;opacity:.6}
+
+/* PANELS */
+.tab-panel{display:none;animation:fadeUp .35s ease}
+.tab-panel.active{display:block}
+.panel-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px}
+.panel-title{display:flex;align-items:center;gap:12px}
+.panel-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:19px}
+.panel-icon.yt{background:rgba(255,45,85,0.15)}
+.panel-icon.sc{background:rgba(0,229,255,0.1)}
+.panel-icon.sm{background:rgba(168,85,247,0.12)}
+.panel-icon.so{background:rgba(52,211,153,0.1)}
+.panel-name{font-size:17px;font-weight:800}
+.panel-count{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted)}
+.btn-add{display:flex;align-items:center;gap:6px;padding:9px 16px;border:none;border-radius:10px;cursor:pointer;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;transition:all .2s;color:#fff}
+.btn-add.yt{background:var(--yt)}.btn-add.sc{background:var(--sc);color:#000}.btn-add.sm{background:var(--sm)}.btn-add.so{background:var(--so);color:#000}
+.btn-add:hover{transform:translateY(-2px);filter:brightness(1.1)}
+
+/* GUEST LOCK */
+.guest-lock{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.02);border:1px dashed rgba(255,255,255,0.08);border-radius:10px;padding:9px 14px;font-size:12px;color:var(--muted);margin-bottom:10px}
+.guest-lock a{color:var(--sm);cursor:pointer;text-decoration:underline}
+
+/* SEARCH */
+.search-wrap{position:relative;margin-bottom:20px}
+.search-wrap input{width:100%;padding:11px 14px 11px 42px;background:var(--surface);border:1px solid var(--border);border-radius:12px;color:var(--text);font-family:'Syne',sans-serif;font-size:13px;outline:none;transition:border .2s}
+.search-wrap input:focus{border-color:rgba(168,85,247,0.4)}
+.search-wrap input::placeholder{color:var(--muted)}
+.srch-ico{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:16px}
+
+/* CARDS */
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;transition:all .25s}
+.card:hover{transform:translateY(-4px);border-color:rgba(255,255,255,0.12);box-shadow:0 20px 40px rgba(0,0,0,0.4)}
+.card-thumb{width:100%;aspect-ratio:16/9;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:38px}
+.card-body{padding:14px}
+.card-tag{display:inline-block;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:3px 7px;border-radius:5px;margin-bottom:7px;font-weight:700}
+.card-tag.yt{background:rgba(255,45,85,0.15);color:var(--yt)}
+.card-tag.sc{background:rgba(0,229,255,0.1);color:var(--sc)}
+.card-tag.sm{background:rgba(168,85,247,0.12);color:var(--sm)}
+.card-tag.so{background:rgba(52,211,153,0.1);color:var(--so)}
+.card h3{font-size:14px;font-weight:700;line-height:1.3;margin-bottom:5px}
+.card p{font-size:12px;color:var(--muted);line-height:1.5}
+.card-meta{display:flex;align-items:center;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+.card-date{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted)}
+.card-actions{display:flex;gap:5px}
+.card-btn{height:26px;border:1px solid var(--border);border-radius:7px;background:transparent;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;transition:all .2s;padding:0 8px;gap:3px;font-weight:700;font-family:'Syne',sans-serif}
+.card-btn:hover{background:var(--surface2);color:var(--text)}
+.card-btn.del{color:#ff6b86;border-color:rgba(255,45,85,0.2)}
+.card-btn.del:hover{background:rgba(255,45,85,0.1);color:#ff2d55}
+.added-by{font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);opacity:.5;margin-top:3px}
+.summit-info-grid{display:flex;flex-direction:column;gap:6px;margin-bottom:5px}
+.summit-info-row{display:flex;flex-direction:column;gap:1px}
+.s-label{font-family:'Space Mono',monospace;font-size:9px;color:var(--muted)}
+.s-val{font-size:12px;color:var(--text);line-height:1.4;word-break:break-word}
+.summit-file-btn{display:inline-flex;align-items:center;gap:5px;padding:7px 12px;border-radius:8px;border:1px solid rgba(168,85,247,0.3);background:rgba(168,85,247,0.1);color:var(--sm);font-family:'Space Mono',monospace;font-size:10px;font-weight:700;cursor:pointer;margin-top:6px;transition:all .2s}
+.summit-file-btn:hover{background:rgba(168,85,247,0.2)}
+.file-action-row{display:flex;align-items:center;gap:7px;margin-top:6px;flex-wrap:wrap}
+.file-del-btn{width:26px;height:26px;border-radius:7px;border:1px solid rgba(255,45,85,0.2);background:rgba(255,45,85,0.07);color:#ff6b86;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;transition:all .2s;flex-shrink:0}
+.file-del-btn:hover{background:rgba(255,45,85,0.15);color:#ff2d55}
+
+/* EMPTY */
+.empty{text-align:center;padding:70px 24px;grid-column:1/-1}
+.empty-icon{font-size:50px;margin-bottom:14px;opacity:.4}
+.empty h3{font-size:16px;font-weight:700;margin-bottom:6px;color:var(--muted)}
+.empty p{font-size:13px;color:var(--muted);opacity:.7}
+
+/* ===== CHAT PANEL ===== */
+.chat-locked{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 24px;text-align:center}
+.chat-locked-icon{width:72px;height:72px;border-radius:20px;background:linear-gradient(135deg,rgba(245,158,11,0.2),rgba(245,158,11,0.05));border:1px solid rgba(245,158,11,0.3);display:flex;align-items:center;justify-content:center;font-size:32px;margin-bottom:16px}
+.chat-locked h3{font-size:18px;font-weight:800;margin-bottom:8px}
+.chat-locked p{font-size:13px;color:var(--muted);max-width:300px;line-height:1.6}
+.vip-badge-big{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.3);border-radius:100px;color:var(--vip);font-size:12px;font-weight:700;margin-top:14px;font-family:'Space Mono',monospace}
+
+.chat-layout{display:grid;grid-template-columns:240px 1fr;gap:16px;height:580px}
+@media(max-width:640px){.chat-layout{grid-template-columns:1fr;height:auto}}
+
+/* CHAT SIDEBAR */
+.chat-sidebar{background:var(--surface);border:1px solid var(--border);border-radius:16px;display:flex;flex-direction:column;overflow:hidden}
+.chat-sidebar-hdr{padding:14px 14px 10px;border-bottom:1px solid var(--border)}
+.chat-sidebar-hdr .csh-title{font-size:13px;font-weight:800;margin-bottom:10px}
+.chat-room-list{flex:1;overflow-y:auto;padding:8px}
+.chat-room-list::-webkit-scrollbar{width:3px}
+.chat-room-list::-webkit-scrollbar-track{background:transparent}
+.chat-room-list::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:2px}
+.chat-room{display:flex;align-items:center;gap:10px;padding:10px 10px;border-radius:10px;cursor:pointer;transition:all .2s;margin-bottom:2px}
+.chat-room:hover{background:var(--surface2)}
+.chat-room.active{background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2)}
+.chat-room-ico{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.chat-room-ico.group{background:linear-gradient(135deg,rgba(245,158,11,0.3),rgba(245,158,11,0.1));border:1px solid rgba(245,158,11,0.2)}
+.chat-room-ico.dm{background:var(--surface2);border:1px solid var(--border);overflow:hidden}
+.chat-room-ico.dm img{width:100%;height:100%;object-fit:cover}
+.chat-room-name{font-size:12px;font-weight:700}
+.chat-room-last{font-size:10px;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px}
+.chat-room-unread{width:18px;height:18px;background:var(--vip);border-radius:50%;font-size:10px;font-weight:800;color:#000;display:flex;align-items:center;justify-content:center;margin-left:auto;flex-shrink:0}
+
+/* CHAT MAIN */
+.chat-main{background:var(--surface);border:1px solid var(--border);border-radius:16px;display:flex;flex-direction:column;overflow:hidden}
+.chat-header{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border);flex-shrink:0}
+.chat-hdr-av{width:36px;height:36px;border-radius:9px;background:linear-gradient(135deg,#f59e0b,#d97706);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#000;flex-shrink:0;overflow:hidden}
+.chat-hdr-av img{width:100%;height:100%;object-fit:cover}
+.chat-hdr-name{font-size:13px;font-weight:800}
+.chat-hdr-sub{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);margin-top:1px}
+.chat-hdr-dot{width:7px;height:7px;background:var(--so);border-radius:50%;margin-left:auto;box-shadow:0 0 6px var(--so);animation:pulse 2s infinite;flex-shrink:0}
+
+.chat-messages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px}
+.chat-messages::-webkit-scrollbar{width:3px}
+.chat-messages::-webkit-scrollbar-track{background:transparent}
+.chat-messages::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:2px}
+
+.msg-row{display:flex;gap:8px;animation:msgIn .25s ease}
+.msg-row.mine{flex-direction:row-reverse}
+.msg-av{width:30px;height:30px;border-radius:8px;flex-shrink:0;background:linear-gradient(135deg,#a855f7,#00e5ff);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;overflow:hidden;align-self:flex-end}
+.msg-av.vip{background:linear-gradient(135deg,#f59e0b,#d97706);color:#000}
+.msg-av img{width:100%;height:100%;object-fit:cover}
+.msg-content{max-width:70%}
+.msg-name{font-size:10px;font-weight:700;color:var(--muted);margin-bottom:4px;font-family:'Space Mono',monospace}
+.msg-row.mine .msg-name{text-align:right}
+.msg-bubble{background:var(--surface2);border:1px solid var(--border);border-radius:14px 14px 14px 4px;padding:10px 14px;font-size:13px;line-height:1.5;word-break:break-word}
+.msg-row.mine .msg-bubble{background:linear-gradient(135deg,rgba(245,158,11,0.2),rgba(245,158,11,0.1));border-color:rgba(245,158,11,0.25);border-radius:14px 14px 4px 14px}
+.msg-time{font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);margin-top:4px}
+.msg-row.mine .msg-time{text-align:right}
+.msg-date-divider{text-align:center;font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);padding:4px 0;position:relative}
+.msg-date-divider::before{content:'';position:absolute;top:50%;left:0;right:0;height:1px;background:var(--border)}
+.msg-date-divider span{background:var(--surface);padding:0 10px;position:relative;z-index:1}
+.msg-system{text-align:center;font-size:11px;color:var(--muted);font-family:'Space Mono',monospace;padding:2px 0}
+
+.chat-input-area{padding:12px 14px;border-top:1px solid var(--border);display:flex;gap:8px;align-items:flex-end;flex-shrink:0}
+.chat-input{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:10px 14px;color:var(--text);font-family:'Syne',sans-serif;font-size:13px;outline:none;resize:none;max-height:100px;transition:border .2s;line-height:1.5}
+.chat-input:focus{border-color:rgba(245,158,11,0.4)}
+.chat-input::placeholder{color:var(--muted)}
+.btn-send{width:40px;height:40px;border-radius:11px;background:linear-gradient(135deg,#f59e0b,#d97706);border:none;color:#000;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s}
+.btn-send:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(245,158,11,0.4)}
+
+/* ===== MODALS ===== */
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(8px);z-index:500;display:none;align-items:center;justify-content:center;padding:24px}
+.modal-backdrop.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:20px;width:100%;max-width:480px;padding:26px;animation:fadeUp .3s ease;max-height:90vh;overflow-y:auto}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.modal-header h2{font-size:17px;font-weight:800}
+.modal-close{background:none;border:none;color:var(--muted);cursor:pointer;font-size:20px}
+.form-group{margin-bottom:13px}
+.form-group label{display:block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:6px}
+.form-group input,.form-group textarea{width:100%;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Syne',sans-serif;font-size:13px;outline:none;transition:border .2s;resize:vertical}
+.form-group input:focus,.form-group textarea:focus{border-color:rgba(168,85,247,0.5)}
+.form-group textarea{min-height:80px}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:18px}
+.btn-cancel{padding:9px 18px;background:transparent;border:1px solid var(--border);border-radius:10px;color:var(--muted);cursor:pointer;font-family:'Syne',sans-serif;font-size:13px;font-weight:700}
+.btn-cancel:hover{color:var(--text)}
+.btn-save{padding:9px 22px;border:none;border-radius:10px;cursor:pointer;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:#fff;transition:all .2s}
+.btn-save:hover{filter:brightness(1.1);transform:translateY(-1px)}
+
+/* SUMMIT INNER TABS */
+.summit-msg-tabs{display:flex;gap:3px;background:var(--surface2);border-radius:10px;padding:4px;margin-bottom:12px}
+.smtab{flex:1;padding:7px 5px;border:none;border-radius:8px;background:transparent;color:var(--muted);font-family:'Syne',sans-serif;font-size:11px;font-weight:700;cursor:pointer;transition:all .2s;white-space:nowrap}
+.smtab:hover{color:var(--text)}
+.smtab.active{background:rgba(168,85,247,0.2);color:var(--sm);border:1px solid rgba(168,85,247,0.3)}
+.smtab-panel{display:none}
+.smtab-panel.active{display:block;animation:fadeUp .2s ease}
+
+/* FILE DROP */
+.file-drop-zone{border:2px dashed rgba(168,85,247,0.3);border-radius:12px;padding:22px 16px;text-align:center;cursor:pointer;transition:all .25s;background:rgba(168,85,247,0.03)}
+.file-drop-zone:hover,.file-drop-zone.dragover{border-color:var(--sm);background:rgba(168,85,247,0.08)}
+.file-drop-zone.has-file{border-color:var(--sm);background:rgba(168,85,247,0.07)}
+.fdz-icon{font-size:28px;margin-bottom:6px}
+.fdz-text{font-size:13px;font-weight:700;margin-bottom:3px}
+.fdz-sub{font-size:10px;color:var(--muted);font-family:'Space Mono',monospace}
+
+/* MANAGE ADMINS */
+.admin-list-ui{display:flex;flex-direction:column;gap:8px;margin-bottom:14px;max-height:240px;overflow-y:auto}
+.admin-item{display:flex;align-items:center;gap:10px;background:var(--surface2);border:1px solid var(--border);border-radius:11px;padding:11px 12px}
+.admin-item-av{width:40px;height:40px;border-radius:10px;flex-shrink:0;background:linear-gradient(135deg,#a855f7,#00e5ff);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#fff;overflow:hidden}
+.admin-item-av img{width:100%;height:100%;object-fit:cover}
+.admin-item-av.vip{background:linear-gradient(135deg,#f59e0b,#d97706);color:#000}
+.admin-item-info{flex:1;min-width:0}
+.admin-item-name{font-size:12px;font-weight:800}
+.admin-item-sub{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);margin-top:1px}
+.admin-item-actions{display:flex;gap:5px;align-items:center;flex-shrink:0}
+.admin-item-photo-btn{padding:4px 9px;border:1px solid var(--border);border-radius:7px;background:transparent;color:var(--muted);cursor:pointer;font-size:10px;font-weight:700;font-family:'Syne',sans-serif;transition:all .2s}
+.admin-item-photo-btn:hover{color:var(--sm);border-color:rgba(168,85,247,0.4)}
+.admin-item-del{width:26px;height:26px;border:1px solid var(--border);border-radius:7px;background:transparent;color:var(--muted);cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.admin-item-del:hover{background:rgba(255,45,85,0.1);color:var(--yt);border-color:rgba(255,45,85,0.3)}
+.add-admin-row{display:flex;gap:7px}
+.add-admin-row .form-group{flex:1;margin:0}
+.sec-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:8px;font-family:'Space Mono',monospace}
+
+/* VIP LIST */
+.vip-list-ui{display:flex;flex-direction:column;gap:8px;margin-bottom:14px;max-height:200px;overflow-y:auto}
+
+/* PREMIUM LOCK - blur overlay */
+.prem-wrap{position:relative;min-height:300px}
+.prem-overlay{
+  position:absolute;inset:0;z-index:10;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(10,10,15,0.55);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border-radius:12px;padding:20px
+}
+.prem-overlay.hidden{display:none}
+.prem-card{
+  text-align:center;
+  background:linear-gradient(135deg,rgba(168,85,247,0.15),rgba(245,158,11,0.15));
+  border:1.5px solid rgba(168,85,247,0.35);
+  border-radius:20px;padding:36px 32px;max-width:420px;width:100%;
+  box-shadow:0 8px 40px rgba(0,0,0,0.5);
+  position:relative;z-index:1
+}
+.prem-icon{font-size:2.8rem;margin-bottom:12px;filter:drop-shadow(0 0 14px rgba(168,85,247,0.6))}
+.prem-title{font-size:1.35rem;font-weight:800;background:linear-gradient(135deg,#a855f7,#f59e0b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:8px}
+.prem-desc{color:rgba(255,255,255,0.55);font-size:0.9rem;line-height:1.6;margin-bottom:22px}
+.prem-btn{display:inline-block;background:linear-gradient(135deg,#a855f7,#f59e0b);color:#fff;font-weight:800;font-size:0.9rem;padding:13px 28px;border-radius:12px;text-decoration:none;transition:transform .2s,box-shadow .2s;box-shadow:0 4px 20px rgba(168,85,247,0.4)}
+.prem-btn:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(168,85,247,0.55)}
+</style>
+</head>
+<body>
+<div class="bg-grid"></div>
+<div class="bg-glow"></div>
+
+<!-- ===== LOGIN ===== -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="login-logo-icon">🏔</div>
+      <div class="login-title">Build Zone <em>Library</em></div>
+      <div class="login-sub">Pusat konten kreatif kamu</div>
+    </div>
+    <div class="role-toggle">
+      <button class="role-btn active" id="rb-admin" onclick="setRole('admin')">🔐 Admin</button>
+      <button class="role-btn vip-btn" id="rb-vip" onclick="setRole('vip')">⭐ VIP</button>
+      <button class="role-btn" id="rb-guest" onclick="setRole('guest')">👁 Tamu</button>
+    </div>
+    <div id="login-fields">
+      <div class="l-fields">
+        <div class="l-wrap"><span class="l-ico">👤</span><input class="l-input" id="l-u" type="text" placeholder="Username" autocomplete="off" onkeydown="if(event.key==='Enter')doLogin()"/></div>
+        <div class="l-wrap"><span class="l-ico">🔑</span><input class="l-input" id="l-p" type="password" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()"/></div>
+      </div>
+      <div class="l-err" id="l-err">Username atau password salah!</div>
+      <button class="btn-login" id="btn-do-login" onclick="doLogin()">Masuk →</button>
+      <div class="l-divider"><span></span><p>atau</p><span></span></div>
+    </div>
+    <button class="btn-skip" onclick="enterAsGuest()">Lihat sebagai Tamu →</button>
+  </div>
+</div>
+
+<!-- ===== PREMIUM SPLASH (muncul untuk tamu sebelum konten) ===== -->
+<div id="premium-splash" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(10,10,15,0.97);align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(8px)">
+  <div style="text-align:center;max-width:500px;width:100%;background:linear-gradient(135deg,rgba(168,85,247,0.1),rgba(245,158,11,0.1));border:1.5px solid rgba(168,85,247,0.3);border-radius:24px;padding:50px 40px;box-shadow:0 20px 60px rgba(0,0,0,0.6)">
+    <div style="font-size:3.5rem;margin-bottom:16px;filter:drop-shadow(0 0 20px rgba(245,158,11,0.6))">⭐</div>
+    <div style="font-size:1.8rem;font-weight:800;background:linear-gradient(135deg,#a855f7,#f59e0b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:10px">Build Zone VIP</div>
+    <p style="color:rgba(255,255,255,0.55);font-size:0.95rem;line-height:1.7;margin-bottom:10px">Kamu masuk sebagai <strong style="color:rgba(255,255,255,0.8)">Tamu</strong>.<br>Beberapa konten dikunci untuk member VIP.</p>
+    <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:18px 20px;margin-bottom:24px;text-align:left">
+      <div style="font-size:0.8rem;font-weight:700;color:rgba(255,255,255,0.3);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px">Yang kamu dapatkan sebagai VIP:</div>
+      <div style="display:flex;flex-direction:column;gap:8px;font-size:0.9rem;color:rgba(255,255,255,0.7)">
+        <div>💬 <span>Akses chat eksklusif VIP room</span></div>
+        <div>❓ <span>Tanya langsung ke owner</span></div>
+        <div>📦 <span>Konten eksklusif VIP</span></div>
+        <div>📝 <span>Semua script premium</span></div>
+        <div>🏔 <span>Semua Summit Kit</span></div>
+      </div>
+    </div>
+    <a href="https://discord.com/users/1448071656605089792" target="_blank" style="display:block;background:linear-gradient(135deg,#a855f7,#f59e0b);color:#fff;font-weight:800;font-size:1rem;padding:16px 30px;border-radius:14px;text-decoration:none;margin-bottom:14px;box-shadow:0 6px 24px rgba(168,85,247,0.35);transition:transform .2s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">⭐ Beli VIP — DM Owner di Discord</a>
+    <button onclick="closePremiumSplash()" style="background:transparent;border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.4);font-size:0.85rem;padding:10px 24px;border-radius:10px;cursor:pointer;width:100%;font-family:'Syne',sans-serif;transition:all .2s" onmouseover="this.style.borderColor='rgba(255,255,255,0.25)';this.style.color='rgba(255,255,255,0.6)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.1)';this.style.color='rgba(255,255,255,0.4)'">Lanjut sebagai Tamu (akses terbatas)</button>
+  </div>
+</div>
+
+<!-- ===== MAIN APP ===== -->
+<div class="app" id="main-app">
+  <header>
+    <div class="logo-badge"><span></span> BUILD ZONE LIBRARY v3.0</div>
+    <h1>Build Zone <em>Library</em></h1>
+    <p class="sub">Simpan & kelola semua konten kreatif dalam satu tempat</p>
+  </header>
+
+  <!-- USER BAR -->
+  <div class="user-bar" id="user-bar">
+    <div class="ubar-av" id="ubar-av">👁</div>
+    <div class="ubar-info">
+      <div class="ubar-name" id="ubar-name">Tamu</div>
+      <div class="ubar-role" id="ubar-role">Mode tamu</div>
+    </div>
+    <div class="ubar-actions">
+      <span class="ubar-badge" id="manage-admin-btn" onclick="openManageAdmins()" style="display:none">⚙ Admin</span>
+      <span class="ubar-badge" id="manage-vip-btn" onclick="openManageVIP()" style="display:none" style="background:rgba(245,158,11,0.1);border-color:rgba(245,158,11,0.3);color:var(--vip)">⭐ VIP</span>
+      <button class="btn-logout" onclick="doLogout()">Keluar</button>
+    </div>
+  </div>
+
+  <!-- TEAM SECTION (guest/vip) -->
+  <div class="team-section" id="team-section" style="display:none">
+    <div class="team-hdr">
+      <div class="team-hdr-ico">👥</div>
+      <div><div class="t1">Tim Build Zone Library</div><div class="t2">Admin & member VIP</div></div>
+    </div>
+    <div class="team-grid" id="team-grid"></div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tab-nav">
+    <button class="tab-btn active" data-tab="youtube">▶ YouTube</button>
+    <button class="tab-btn" data-tab="script">📝 Script</button>
+    <button class="tab-btn" data-tab="summit">🏔 Summit Kit</button>
+    <button class="tab-btn" data-tab="social">✦ Sosial</button>
+    <button class="tab-btn vip-tab-btn" data-tab="viproom">⭐ VIP Room <span id="viproom-lock-ico" class="vip-lock">🔒</span></button>
+  </div>
+
+  <!-- YOUTUBE -->
+  <div class="tab-panel active" id="panel-youtube">
+    <div class="panel-header">
+      <div class="panel-title"><div class="panel-icon yt">▶</div><div><div class="panel-name">Video YouTube</div><div class="panel-count" id="count-youtube">0 item</div></div></div>
+      <button class="btn-add yt" id="add-youtube" onclick="openModal('youtube')" style="display:none">＋ Tambah</button>
+    </div>
+    <div class="guest-lock" id="lock-youtube" style="display:none">🔒 Hanya admin yang bisa menambah. <a onclick="doLogout()">Login</a></div>
+    <div class="search-wrap"><span class="srch-ico">🔍</span><input type="text" placeholder="Cari video..." oninput="filterCards('youtube',this.value)"></div>
+    <div class="cards-grid" id="grid-youtube"></div>
+  </div>
+
+  <!-- SCRIPT -->
+  <div class="tab-panel" id="panel-script">
+    <div class="panel-header">
+      <div class="panel-title"><div class="panel-icon sc">📝</div><div><div class="panel-name">Kumpulan Script</div><div class="panel-count" id="count-script">0 item</div></div></div>
+      <button class="btn-add sc" id="add-script" onclick="openModal('script')" style="display:none">＋ Tambah</button>
+    </div>
+    <div class="guest-lock" id="lock-script" style="display:none">🔒 Hanya admin yang bisa menambah. <a onclick="doLogout()">Login</a></div>
+    <div class="search-wrap"><span class="srch-ico">🔍</span><input type="text" placeholder="Cari script..." oninput="filterCards('script',this.value)"></div>
+    <div class="cards-grid" id="grid-script"></div>
+  </div>
+
+  <!-- SUMMIT -->
+  <div class="tab-panel" id="panel-summit">
+    <div class="panel-header">
+      <div class="panel-title"><div class="panel-icon sm">🏔</div><div><div class="panel-name">Summit Kit</div><div class="panel-count" id="count-summit">0 item</div></div></div>
+      <button class="btn-add sm" id="add-summit" onclick="openModal('summit')" style="display:none">＋ Tambah</button>
+    </div>
+    <div class="guest-lock" id="lock-summit" style="display:none">🔒 Hanya admin yang bisa menambah. <a onclick="doLogout()">Login</a></div>
+    <div class="search-wrap"><span class="srch-ico">🔍</span><input type="text" placeholder="Cari kit..." oninput="filterCards('summit',this.value)"></div>
+    <div class="cards-grid" id="grid-summit"></div>
+  </div>
+  <!-- SOCIAL -->
+  <div class="tab-panel" id="panel-social">
+    <div class="panel-header">
+      <div class="panel-title"><div class="panel-icon so">✦</div><div><div class="panel-name">Media Sosial</div><div class="panel-count" id="count-social">0 item</div></div></div>
+      <button class="btn-add so" id="add-social" onclick="openModal('social')" style="display:none">＋ Tambah</button>
+    </div>
+    <div class="guest-lock" id="lock-social" style="display:none">🔒 Hanya admin yang bisa menambah. <a onclick="doLogout()">Login</a></div>
+    <div class="search-wrap"><span class="srch-ico">🔍</span><input type="text" placeholder="Cari konten..." oninput="filterCards('social',this.value)"></div>
+    <div class="cards-grid" id="grid-social"></div>
+  </div>
+
+  <!-- ===== VIP ROOM ===== -->
+  <div class="tab-panel" id="panel-viproom">
+
+    <!-- LOCKED VIEW -->
+    <div id="viproom-locked" class="vip-locked-screen">
+      <div class="vip-locked-glow"></div>
+      <div class="vip-locked-icon">⭐</div>
+      <h2 class="vip-locked-title">VIP <span>Room</span></h2>
+      <p class="vip-locked-sub">Area eksklusif khusus member VIP & Admin.<br>Hubungi Owner untuk mendapatkan akses.</p>
+      <div class="vip-locked-badge">🔒 AKSES TERBATAS</div>
+    </div>
+
+    <!-- VIP CONTENT -->
+    <div id="viproom-content" style="display:none">
+
+      <!-- VIP HEADER CARD -->
+      <div class="vip-hero">
+        <div class="vip-hero-glow"></div>
+        <div class="vip-hero-left">
+          <div class="vip-hero-av" id="vip-hero-av">⭐</div>
+          <div>
+            <div class="vip-hero-name" id="vip-hero-name">VIP</div>
+            <div class="vip-hero-role" id="vip-hero-role">Member</div>
+          </div>
+        </div>
+        <div class="vip-hero-badge">⭐ PREMIUM</div>
+      </div>
+
+
+      <!-- VIP SUB-TABS -->
+      <div class="vip-subtab-nav">
+        <button class="vip-stab active" data-stab="chat" onclick="switchVIPTab(this,'chat')">💬 Chat</button>
+        <button class="vip-stab" data-stab="tanya" onclick="switchVIPTab(this,'tanya')">❓ Tanya</button>
+        <button class="vip-stab" data-stab="konten" onclick="switchVIPTab(this,'konten')">📦 Konten</button>
+        <button class="vip-stab" data-stab="scriptvip" onclick="switchVIPTab(this,'scriptvip')">📝 Script VIP</button>
+        <button class="vip-stab" data-stab="summitvip" onclick="switchVIPTab(this,'summitvip')">🏔 Summit VIP</button>
+        <button class="vip-stab" data-stab="info" onclick="switchVIPTab(this,'info')">📋 Info</button>
+      </div>
+
+      <!-- SUB PANEL: CHAT -->
+      <div class="vip-stab-panel active" id="vstab-chat">
+        <div class="vip-chat-wrap">
+            <div class="chat-layout">
+              <div class="chat-sidebar">
+                <div class="chat-sidebar-hdr"><div class="csh-title">💬 Rooms</div></div>
+                <div class="chat-room-list" id="chat-room-list"></div>
+              </div>
+              <div class="chat-main">
+                <div class="chat-header" id="chat-header">
+                  <div class="chat-hdr-av" id="chdr-av">💬</div>
+                  <div><div class="chat-hdr-name" id="chdr-name">Pilih room</div><div class="chat-hdr-sub" id="chdr-sub">—</div></div>
+                  <div class="chat-hdr-dot"></div>
+                </div>
+                <div class="chat-messages" id="chat-messages"><div class="msg-system">Pilih room untuk mulai 👋</div></div>
+                <div class="chat-input-area">
+                  <textarea class="chat-input" id="chat-input" placeholder="Tulis pesan..." rows="1" onkeydown="handleChatKey(event)" oninput="autoResize(this)"></textarea>
+                  <button class="btn-send" onclick="sendMessage()">➤</button>
+                </div>
+              </div>
+            </div>
+        </div>
+      </div>
+
+      <!-- SUB PANEL: TANYA -->
+      <div class="vip-stab-panel" id="vstab-tanya">
+        <div>
+            <div class="tanya-ask-box">
+              <h3>❓ Ajukan Pertanyaan</h3>
+              <textarea class="tanya-input" id="tanya-input" placeholder="Tulis pertanyaanmu di sini..."></textarea>
+              <button class="btn-tanya-kirim" onclick="postTanya()">⭐ Kirim Pertanyaan</button>
+            </div>
+            <div class="tanya-section-hdr"><h3>💬 Pertanyaan & Jawaban</h3></div>
+            <div class="tanya-list" id="tanya-list"></div>
+        </div>
+      </div>
+
+      <!-- SUB PANEL: KONTEN VIP -->
+      <div class="vip-stab-panel" id="vstab-konten">
+        <div>
+            <div class="vip-konten-header">
+              <div style="flex:1"><div class="panel-name">📦 Konten Eksklusif VIP</div><div class="panel-count" id="count-vipkonten">0 item</div></div>
+              <button class="btn-vip-add" id="add-vipkonten" onclick="openVIPKontenModal()" style="display:none">＋ Tambah</button>
+            </div>
+            <div class="search-wrap" style="margin-top:14px"><span class="srch-ico">🔍</span><input type="text" placeholder="Cari konten VIP..." oninput="filterVIPKonten(this.value)"></div>
+            <div class="vip-konten-grid" id="grid-vipkonten"></div>
+        </div>
+      </div>
+
+      <!-- SUB PANEL: SCRIPT VIP -->
+      <div class="vip-stab-panel" id="vstab-scriptvip">
+        <div class="panel-header" style="margin-bottom:14px">
+          <div class="panel-title"><div class="panel-icon sc">📝</div><div><div class="panel-name">Script VIP</div><div class="panel-count" id="count-scriptvip">0 item</div></div></div>
+          <button class="btn-add sc" id="add-scriptvip" onclick="openModal('scriptvip')" style="display:none">＋ Tambah</button>
+        </div>
+        <div class="search-wrap"><span class="srch-ico">🔍</span><input type="text" placeholder="Cari script VIP..." oninput="filterCards('scriptvip',this.value)"></div>
+        <div class="cards-grid" id="grid-scriptvip"></div>
+      </div>
+
+      <!-- SUB PANEL: SUMMIT VIP -->
+      <div class="vip-stab-panel" id="vstab-summitvip">
+        <div class="panel-header" style="margin-bottom:14px">
+          <div class="panel-title"><div class="panel-icon sm">🏔</div><div><div class="panel-name">Summit Kit VIP</div><div class="panel-count" id="count-summitvip">0 item</div></div></div>
+          <button class="btn-add sm" id="add-summitvip" onclick="openModal('summitvip')" style="display:none">＋ Tambah</button>
+        </div>
+        <div class="search-wrap"><span class="srch-ico">🔍</span><input type="text" placeholder="Cari kit VIP..." oninput="filterCards('summitvip',this.value)"></div>
+        <div class="cards-grid" id="grid-summitvip"></div>
+      </div>
+
+      <!-- SUB PANEL: INFO -->
+      <div class="vip-stab-panel" id="vstab-info">
+        <div class="vip-info-cards">
+          <div class="vip-info-card gold">
+            <div class="vic-icon">👑</div>
+            <div class="vic-title">Owner</div>
+            <div class="vic-val" id="info-owner-name">DaFz</div>
+          </div>
+          <div class="vip-info-card purple">
+            <div class="vic-icon">👥</div>
+            <div class="vic-title">Total VIP</div>
+            <div class="vic-val" id="info-vip-count">0</div>
+          </div>
+          <div class="vip-info-card teal">
+            <div class="vic-icon">💬</div>
+            <div class="vic-title">Total Tanya</div>
+            <div class="vic-val" id="info-tanya-count">0</div>
+          </div>
+          <div class="vip-info-card amber">
+            <div class="vic-icon">📦</div>
+            <div class="vic-title">Konten VIP</div>
+            <div class="vic-val" id="info-konten-count">0</div>
+          </div>
+        </div>
+        <div class="vip-member-list-wrap">
+          <div class="tanya-section-hdr"><h3>⭐ Daftar Member VIP</h3></div>
+          <div id="vip-member-list-display"></div>
+        </div>
+
+        <!-- VIP BANNER VIDEO - paling bawah -->
+        <div class="vip-banner" id="vip-banner" style="margin-top:24px;border-radius:16px;overflow:hidden">
+          <div style="position:relative;width:100%;aspect-ratio:16/9;border-radius:16px;overflow:hidden;background:#0a0a0f">
+            <img src="https://img.youtube.com/vi/Ytqn-1CaJ2w/maxresdefault.jpg" style="width:100%;height:100%;object-fit:cover;display:block;border-radius:16px" onerror="this.src='https://img.youtube.com/vi/Ytqn-1CaJ2w/hqdefault.jpg'">
+            <!-- Overlay: efek gelap + tombol play dekorasi, tidak bisa diklik -->
+            <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0.1),rgba(0,0,0,0.4));z-index:2;pointer-events:all;cursor:default;display:flex;align-items:center;justify-content:center">
+              <div style="width:64px;height:64px;background:rgba(255,255,255,0.15);border:2px solid rgba(255,255,255,0.3);border-radius:50%;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)">
+                <div style="width:0;height:0;border-style:solid;border-width:12px 0 12px 22px;border-color:transparent transparent transparent rgba(255,255,255,0.9);margin-left:4px"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- CONTENT MODAL -->
+<div class="modal-backdrop" id="modal">
+  <div class="modal">
+    <div class="modal-header"><h2 id="modal-title">Tambah</h2><button class="modal-close" onclick="closeModal()">✕</button></div>
+    <div id="modal-body"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Batal</button>
+      <button class="btn-save" id="btn-save-item" onclick="saveItem()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- MANAGE ADMINS MODAL -->
+<div class="modal-backdrop" id="manage-modal">
+  <div class="modal">
+    <div class="modal-header"><h2>⚙ Kelola Admin</h2><button class="modal-close" onclick="document.getElementById('manage-modal').classList.remove('open')">✕</button></div>
+    <p class="sec-label">Daftar Admin</p>
+    <div class="admin-list-ui" id="admin-list-ui"></div>
+    <div id="add-admin-section">
+      <p class="sec-label">Tambah Admin Baru</p>
+      <div class="add-admin-row">
+        <div class="form-group"><input id="new-u" placeholder="Username"/></div>
+        <div class="form-group"><input id="new-p" type="password" placeholder="Password"/></div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;margin-top:10px">
+        <button class="btn-save" style="background:#a855f7" onclick="addAdmin()">＋ Tambah Admin</button>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
+      <button class="btn-cancel" onclick="document.getElementById('manage-modal').classList.remove('open')">Tutup</button>
+    </div>
+  </div>
+</div>
+
+<!-- MANAGE VIP MODAL -->
+<div class="modal-backdrop" id="vip-modal">
+  <div class="modal">
+    <div class="modal-header"><h2>⭐ Kelola VIP</h2><button class="modal-close" onclick="document.getElementById('vip-modal').classList.remove('open')">✕</button></div>
+    <p class="sec-label">Member VIP</p>
+    <div class="vip-list-ui" id="vip-list-ui"></div>
+    <p class="sec-label">Tambah Member VIP</p>
+    <div class="add-admin-row">
+      <div class="form-group"><input id="new-vu" placeholder="Username VIP"/></div>
+      <div class="form-group"><input id="new-vp" type="password" placeholder="Password"/></div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;margin-top:10px">
+      <button class="btn-save" style="background:linear-gradient(135deg,#f59e0b,#d97706);color:#000" onclick="addVIP()">＋ Tambah VIP</button>
+    </div>
+    <div style="display:flex;justify-content:flex-end;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
+      <button class="btn-cancel" onclick="document.getElementById('vip-modal').classList.remove('open')">Tutup</button>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="photo-input" accept="image/*" style="display:none" onchange="handlePhotoUpload(this)"/>
+
+<!-- VIP KONTEN MODAL -->
+<div class="modal-backdrop" id="vkm">
+  <div class="modal">
+    <div class="modal-header"><h2>⭐ Tambah Konten VIP</h2><button class="modal-close" onclick="document.getElementById('vkm').classList.remove('open')">✕</button></div>
+    <div class="form-group"><label>Judul</label><input id="vk-title" placeholder="Nama konten eksklusif..."/></div>
+    <div class="form-group"><label>Kategori</label><input id="vk-cat" placeholder="Tutorial, Resource, Pack..."/></div>
+    <div class="form-group"><label>Deskripsi</label><textarea id="vk-desc" placeholder="Deskripsi singkat..."></textarea></div>
+    <div class="form-group"><label>Link (opsional)</label><input id="vk-url" placeholder="https://..."/></div>
+    <div class="form-group"><label>Emoji</label><input id="vk-emoji" placeholder="⭐" maxlength="4"/></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="document.getElementById('vkm').classList.remove('open')">Batal</button>
+      <button class="btn-save" style="background:linear-gradient(135deg,#f59e0b,#d97706);color:#000" onclick="saveVIPKonten2()">⭐ Simpan</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// FIREBASE CONFIG — isi dengan config Firebase kamu di sini
+// Biarkan kosong untuk mode localStorage (offline/demo)
+// ============================================================
+const FIREBASE_CONFIG = {
+  // apiKey: "YOUR_API_KEY",
+  // authDomain: "YOUR_PROJECT.firebaseapp.com",
+  // databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
+  // projectId: "YOUR_PROJECT_ID",
+  // storageBucket: "YOUR_PROJECT.appspot.com",
+  // messagingSenderId: "YOUR_SENDER_ID",
+  // appId: "YOUR_APP_ID"
+};
+const USE_FIREBASE = Object.keys(FIREBASE_CONFIG).filter(k=>FIREBASE_CONFIG[k]).length > 0;
+
+// ============================================================
+// CHAT STORAGE — abstraksi Firebase vs localStorage
+// ============================================================
+let firebaseDB = null;
+let chatListeners = {};
+
+async function initFirebase() {
+  if(!USE_FIREBASE) return;
+  try {
+    const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js');
+    const { getDatabase, ref, push, onValue, off } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js');
+    const app = initializeApp(FIREBASE_CONFIG);
+    firebaseDB = getDatabase(app);
+    window._fbRef = ref; window._fbPush = push; window._fbOnValue = onValue; window._fbOff = off;
+    console.log('✅ Firebase connected');
+  } catch(e) { console.warn('Firebase gagal:', e); }
+}
+
+function chatStorageSend(roomId, msg) {
+  if(USE_FIREBASE && firebaseDB) {
+    window._fbPush(window._fbRef(firebaseDB, 'chats/'+roomId), msg);
+  } else {
+    const key = 'mh_chat_'+roomId;
+    const msgs = JSON.parse(localStorage.getItem(key)||'[]');
+    msgs.push(msg);
+    if(msgs.length > 500) msgs.splice(0, msgs.length-500);
+    localStorage.setItem(key, JSON.stringify(msgs));
+    renderMessages(roomId);
+  }
+}
+
+function chatStorageListen(roomId, cb) {
+  if(USE_FIREBASE && firebaseDB) {
+    if(chatListeners[roomId]) window._fbOff(chatListeners[roomId]);
+    const r = window._fbRef(firebaseDB, 'chats/'+roomId);
+    chatListeners[roomId] = r;
+    window._fbOnValue(r, snap => {
+      const val = snap.val();
+      const msgs = val ? Object.values(val) : [];
+      cb(msgs.sort((a,b)=>a.ts-b.ts));
+    });
+  } else {
+    const key = 'mh_chat_'+roomId;
+    const msgs = JSON.parse(localStorage.getItem(key)||'[]');
+    cb(msgs);
+  }
+}
+
+// ============================================================
+// AUTH SYSTEM
+// ============================================================
+const OWNER = 'DaFz';
+const DEFAULT_ADMINS = [{ username:'DaFz', password:'Cihuy', role:'owner' }];
+
+function getAdmins() { try { const a=localStorage.getItem('mh_admins'); return a?JSON.parse(a):DEFAULT_ADMINS; } catch(e){ return DEFAULT_ADMINS; } }
+function saveAdmins(l) { localStorage.setItem('mh_admins',JSON.stringify(l)); }
+function getVIPs() { try { const v=localStorage.getItem('mh_vips'); return v?JSON.parse(v):[]; } catch(e){ return []; } }
+function saveVIPs(l) { localStorage.setItem('mh_vips',JSON.stringify(l)); }
+
+function isOwner() { return currentUser?.username===OWNER; }
+function isAdmin() { return currentUser?.type==='admin'; }
+function isVIP()   { return currentUser?.type==='vip' || isAdmin(); }
+
+let currentUser = null;
+let loginRoleMode = 'admin';
+
+function setRole(role) {
+  loginRoleMode = role;
+  ['admin','vip','guest'].forEach(r=>document.getElementById('rb-'+r).classList.toggle('active',r===role));
+  const fields = document.getElementById('login-fields');
+  const btn = document.getElementById('btn-do-login');
+  if(role==='guest') { fields.style.display='none'; }
+  else {
+    fields.style.display='block';
+    btn.className = role==='vip' ? 'btn-login vip-login-btn' : 'btn-login';
+    btn.textContent = role==='vip' ? '⭐ Masuk sebagai VIP →' : '🔐 Masuk sebagai Admin →';
+  }
+}
+
+function doLogin() {
+  const u=document.getElementById('l-u').value.trim();
+  const p=document.getElementById('l-p').value;
+  const err=document.getElementById('l-err');
+  if(loginRoleMode==='admin') {
+    const found=getAdmins().find(a=>a.username===u&&a.password===p);
+    if(found){ currentUser={username:u,type:'admin',role:found.role||'admin'}; enterApp(); }
+    else { err.classList.add('show'); setTimeout(()=>err.classList.remove('show'),2500); }
+  } else if(loginRoleMode==='vip') {
+    const found=getVIPs().find(v=>v.username===u&&v.password===p);
+    if(found){ currentUser={username:u,type:'vip'}; enterApp(); }
+    else { err.classList.add('show'); setTimeout(()=>err.classList.remove('show'),2500); }
+  }
+}
+
+function enterAsGuest() { currentUser=null; enterApp(); }
+
+function enterApp() {
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('main-app').classList.add('visible');
+  const admin=isAdmin(), vip=isVIP(), guest=!currentUser;
+  const owner=isOwner();
+
+  // Tamu: tampilkan splash premium dulu
+  if(guest) {
+    const splash = document.getElementById('premium-splash');
+    if(splash) splash.style.display='flex';
+  }
+
+  // User bar
+  const bar=document.getElementById('user-bar');
+  bar.className='user-bar'+(admin?' is-admin'+(owner?' is-owner':''):'')+(currentUser?.type==='vip'?' is-vip':'');
+  const av=document.getElementById('ubar-av');
+  if(guest){ av.className='ubar-av guest-av'; av.innerHTML='👁'; }
+  else if(admin){ av.className='ubar-av'; const ph=getPhoto(currentUser.username); av.innerHTML=ph?`<img src="${ph}"/>`:(owner?'👑':currentUser.username[0].toUpperCase()); }
+  else { av.className='ubar-av vip-av'; const ph=getPhoto(currentUser.username); av.innerHTML=ph?`<img src="${ph}"/>`:currentUser.username[0].toUpperCase(); }
+  document.getElementById('ubar-name').textContent=guest?'Tamu':(currentUser.username+(owner?' 👑':''));
+  document.getElementById('ubar-role').textContent=guest?'👁 Mode tamu — akses terbatas':admin?`${owner?'👑 OWNER':'✅ ADMIN'} — bisa kelola konten`:'⭐ VIP — akses penuh';
+  document.getElementById('manage-admin-btn').style.display=admin?'flex':'none';
+  document.getElementById('manage-vip-btn').style.cssText=owner?'display:flex;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);color:var(--vip);align-items:center;gap:5px;padding:5px 11px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer':'display:none';
+
+  // Tab-tab konten biasa (YouTube, Social: semua bisa lihat)
+  ['youtube','social'].forEach(tab=>{
+    document.getElementById('add-'+tab).style.display=admin?'flex':'none';
+    document.getElementById('lock-'+tab).style.display=admin?'none':'flex';
+  });
+
+  // Script & Summit: tamu lihat blur overlay di section VIP, free tetap terbuka
+  ['script','summit'].forEach(tab=>{
+    document.getElementById('add-'+tab).style.display=admin?'flex':'none';
+    document.getElementById('lock-'+tab).style.display=admin?'none':'flex';
+    const ov=document.getElementById('guest-lock-'+tab);
+    if(ov) ov.classList.toggle('hidden', !guest);
+  });
+
+  // VIP Room: tamu lihat locked screen, VIP/Admin masuk
+  document.getElementById('viproom-lock-ico').style.display=vip?'none':'inline';
+  document.getElementById('viproom-locked').style.display=vip?'none':'flex';
+  document.getElementById('viproom-content').style.display=vip?'block':'none';
+
+  if(vip){
+    // Hero card
+    const ph=getPhoto(currentUser.username);
+    const hav=document.getElementById('vip-hero-av');
+    hav.innerHTML=ph?`<img src="${ph}"/>`:currentUser.username[0].toUpperCase();
+    document.getElementById('vip-hero-name').textContent=currentUser.username+(isOwner()?' 👑':'');
+    document.getElementById('vip-hero-role').textContent=isOwner()?'OWNER · PREMIUM':isAdmin()?'ADMIN · PREMIUM':'VIP · PREMIUM';
+
+    // Tombol tambah di Script VIP & Summit VIP (hanya admin)
+    ['scriptvip','summitvip'].forEach(tab=>{
+      const btn=document.getElementById('add-'+tab);
+      if(btn) btn.style.display=admin?'flex':'none';
+    });
+
+    buildChatRooms();
+    initFirebase();
+    renderTanya();
+    renderVIPKonten();
+    renderVIPInfo();
+    renderGrid('scriptvip');
+    renderGrid('summitvip');
+  }
+
+  // Team section
+  if(!admin){ document.getElementById('team-section').style.display='block'; renderTeam(); }
+  else document.getElementById('team-section').style.display='none';
+
+  renderAll();
+}
+
+function closePremiumSplash(){
+  const splash=document.getElementById('premium-splash');
+  if(splash) splash.style.display='none';
+}
+
+function doLogout() {
+  currentUser=null;
+  document.getElementById('main-app').classList.remove('visible');
+  document.getElementById('login-screen').classList.remove('hidden');
+  document.getElementById('l-u').value=''; document.getElementById('l-p').value='';
+  setRole('admin');
+  // Reset chat room
+  activeRoom=null;
+}
+
+// ============================================================
+// PHOTO
+// ============================================================
+function getPhoto(u){ try{ return localStorage.getItem('mh_photo_'+u)||null; }catch(e){return null;} }
+function setPhoto(u,b){ try{ localStorage.setItem('mh_photo_'+u,b); }catch(e){} }
+
+let photoTarget=null;
+function triggerPhotoUpload(u){ photoTarget=u; document.getElementById('photo-input').click(); }
+function handlePhotoUpload(inp){
+  const file=inp.files[0]; if(!file||!photoTarget) return;
+  const r=new FileReader();
+  r.onload=e=>{
+    setPhoto(photoTarget,e.target.result);
+    if(currentUser?.username===photoTarget){
+      const av=document.getElementById('ubar-av');
+      av.innerHTML=`<img src="${e.target.result}"/>`;
+    }
+    renderAdminListUI(); renderVIPListUI();
+    inp.value=''; photoTarget=null;
+  };
+  r.readAsDataURL(file);
+}
+
+// ============================================================
+// TEAM
+// ============================================================
+function renderTeam(){
+  const admins=getAdmins(), vips=getVIPs();
+  const all=[...admins.map(a=>({...a,type:'admin'})),...vips.map(v=>({...v,type:'vip'}))];
+  document.getElementById('team-grid').innerHTML=all.map(m=>{
+    const ph=getPhoto(m.username);
+    const isOw=m.username===OWNER;
+    const avClass=m.type==='vip'?'team-av vip-av':'team-av';
+    const avContent=ph?`<img src="${ph}"/>`:m.username[0].toUpperCase();
+    return `<div class="team-card">
+      <div class="${avClass}">${avContent}</div>
+      <div class="team-info">
+        <div class="tn">${m.username}</div>
+        <div class="tr">${isOw?'👑 Owner':m.type==='admin'?'🔐 Admin':'⭐ VIP'}</div>
+      </div>
+      <div class="team-dot" style="${m.type==='vip'?'background:var(--vip);box-shadow:0 0 6px var(--vip)':''}"></div>
+    </div>`;
+  }).join('');
+}
+
+// ============================================================
+// MANAGE ADMINS
+// ============================================================
+function openManageAdmins(){ renderAdminListUI(); document.getElementById('manage-modal').classList.add('open'); }
+
+function renderAdminListUI(){
+  const admins=getAdmins(), amOwner=isOwner();
+  document.getElementById('admin-list-ui').innerHTML=admins.map((a,i)=>{
+    const ph=getPhoto(a.username); const isOw=a.username===OWNER; const isMe=a.username===currentUser?.username;
+    const avContent=ph?`<img src="${ph}"/>`:a.username[0].toUpperCase();
+    return `<div class="admin-item">
+      <div class="admin-item-av" style="${isOw?'border:2px solid gold':''}">${avContent}</div>
+      <div class="admin-item-info">
+        <div class="admin-item-name">${a.username}${isOw?' <span style="color:gold;font-size:10px">👑</span>':''}${isMe?' <span style="color:var(--so);font-size:10px">(kamu)</span>':''}</div>
+        <div class="admin-item-sub">${ph?'Foto terpasang':'Belum ada foto'}</div>
+      </div>
+      <div class="admin-item-actions">
+        ${isMe?`<button class="admin-item-photo-btn" onclick="triggerPhotoUpload('${a.username}')">📷 Foto</button>`:''}
+        ${amOwner&&!isOw?`<button class="admin-item-del" onclick="removeAdmin(${i})">✕</button>`:''}
+      </div>
+    </div>`;
+  }).join('');
+  const sec=document.getElementById('add-admin-section');
+  if(sec) sec.style.display=amOwner?'block':'none';
+}
+
+function removeAdmin(i){
+  if(!isOwner()) return;
+  const admins=getAdmins(); if(admins[i].username===OWNER){alert('Owner tidak bisa dihapus!');return;}
+  if(confirm('Hapus admin "'+admins[i].username+'"?')){ admins.splice(i,1); saveAdmins(admins); renderAdminListUI(); }
+}
+
+function addAdmin(){
+  if(!isOwner()){alert('Hanya Owner!');return;}
+  const u=document.getElementById('new-u').value.trim(), p=document.getElementById('new-p').value.trim();
+  if(!u||!p){alert('Lengkapi username & password!');return;}
+  const admins=getAdmins();
+  if(admins.find(a=>a.username===u)){alert('Username sudah ada!');return;}
+  admins.push({username:u,password:p,role:'admin'}); saveAdmins(admins);
+  document.getElementById('new-u').value=''; document.getElementById('new-p').value='';
+  renderAdminListUI();
+}
+
+// ============================================================
+// MANAGE VIP
+// ============================================================
+function openManageVIP(){ renderVIPListUI(); document.getElementById('vip-modal').classList.add('open'); }
+
+function renderVIPListUI(){
+  const vips=getVIPs();
+  document.getElementById('vip-list-ui').innerHTML=vips.length?vips.map((v,i)=>{
+    const ph=getPhoto(v.username); const isMe=v.username===currentUser?.username;
+    const avContent=ph?`<img src="${ph}"/>`:v.username[0].toUpperCase();
+    return `<div class="admin-item">
+      <div class="admin-item-av vip">${avContent}</div>
+      <div class="admin-item-info">
+        <div class="admin-item-name">⭐ ${v.username}${isMe?' <span style="color:var(--so);font-size:10px">(kamu)</span>':''}</div>
+        <div class="admin-item-sub">${ph?'Foto terpasang':'Belum ada foto'}</div>
+      </div>
+      <div class="admin-item-actions">
+        ${isMe?`<button class="admin-item-photo-btn" onclick="triggerPhotoUpload('${v.username}')">📷 Foto</button>`:''}
+        <button class="admin-item-del" onclick="removeVIP(${i})">✕</button>
+      </div>
+    </div>`;
+  }).join(''):'<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px">Belum ada member VIP</div>';
+}
+
+function removeVIP(i){
+  const vips=getVIPs();
+  if(confirm('Hapus VIP "'+vips[i].username+'"?')){ vips.splice(i,1); saveVIPs(vips); renderVIPListUI(); }
+}
+
+function addVIP(){
+  const u=document.getElementById('new-vu').value.trim(), p=document.getElementById('new-vp').value.trim();
+  if(!u||!p){alert('Lengkapi username & password!');return;}
+  const vips=getVIPs(); const admins=getAdmins();
+  if(vips.find(v=>v.username===u)||admins.find(a=>a.username===u)){alert('Username sudah digunakan!');return;}
+  vips.push({username:u,password:p}); saveVIPs(vips);
+  document.getElementById('new-vu').value=''; document.getElementById('new-vp').value='';
+  renderVIPListUI();
+}
+
+// ============================================================
+// CHAT SYSTEM
+// ============================================================
+let activeRoom=null;
+
+function buildChatRooms(){
+  const vips=getVIPs(), admins=getAdmins();
+  const list=document.getElementById('chat-room-list');
+  let rooms=[];
+
+  // Group chat
+  rooms.push({ id:'group', name:'💬 Chat Grup VIP', sub:'Semua VIP & Admin', type:'group' });
+
+  // DM rooms — current user can DM everyone else
+  const allUsers=[...admins.map(a=>({...a,t:'admin'})),...vips.map(v=>({...v,t:'vip'}))];
+  allUsers.forEach(u=>{
+    if(u.username!==currentUser.username){
+      const dmId=[currentUser.username,u.username].sort().join('__dm__');
+      rooms.push({ id:dmId, name:u.username, sub:u.t==='admin'?(u.username===OWNER?'👑 Owner':'🔐 Admin'):'⭐ VIP', type:'dm', target:u });
+    }
+  });
+
+  list.innerHTML=rooms.map(r=>{
+    const ph=r.type==='dm'?getPhoto(r.target.username):null;
+    const ico=r.type==='group'?`<div class="chat-room-ico group">💬</div>`:`<div class="chat-room-ico dm">${ph?`<img src="${ph}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit"/>`:(r.name[0].toUpperCase())}</div>`;
+    return `<div class="chat-room" id="room-${r.id}" onclick="selectRoom('${r.id}','${r.name}','${r.sub}',${JSON.stringify(r.type==='group')})">
+      ${ico}
+      <div style="min-width:0">
+        <div class="chat-room-name">${r.name}</div>
+        <div class="chat-room-last">${r.sub}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Auto select group
+  selectRoom('group','💬 Chat Grup VIP','Semua VIP & Admin',true);
+}
+
+function selectRoom(id, name, sub, isGroup){
+  activeRoom=id;
+  document.querySelectorAll('.chat-room').forEach(r=>r.classList.remove('active'));
+  const el=document.getElementById('room-'+id);
+  if(el) el.classList.add('active');
+
+  const hdrAv=document.getElementById('chdr-av');
+  if(isGroup){
+    hdrAv.innerHTML='💬'; hdrAv.style.background='linear-gradient(135deg,#f59e0b,#d97706)';
+  } else {
+    const ph=getPhoto(name);
+    hdrAv.innerHTML=ph?`<img src="${ph}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit"/>`:name[0].toUpperCase();
+    hdrAv.style.background=ph?'transparent':'linear-gradient(135deg,#f59e0b,#d97706)';
+  }
+  document.getElementById('chdr-name').textContent=name;
+  document.getElementById('chdr-sub').textContent=sub;
+  document.getElementById('chat-input').placeholder=`Pesan ke ${name}...`;
+
+  chatStorageListen(id, msgs=>renderMessages(id, msgs));
+}
+
+function renderMessages(roomId, msgs){
+  if(activeRoom!==roomId) return;
+  const container=document.getElementById('chat-messages');
+  if(!msgs||!msgs.length){
+    container.innerHTML='<div class="msg-system">Belum ada pesan. Mulai obrolan! 👋</div>';
+    return;
+  }
+  let html='', lastDate='';
+  msgs.forEach((m,idx)=>{
+    const d=new Date(m.ts); const dateStr=d.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'});
+    if(dateStr!==lastDate){ html+=`<div class="msg-date-divider"><span>${dateStr}</span></div>`; lastDate=dateStr; }
+    const mine=m.sender===currentUser?.username;
+    const ph=getPhoto(m.sender);
+    const isVipSender=getVIPs().find(v=>v.username===m.sender);
+    const avClass=`msg-av${isVipSender?' vip':''}`;
+    const avContent=ph?`<img src="${ph}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit"/>`:m.sender[0].toUpperCase();
+    const time=d.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
+    const canDel=mine||isAdmin();
+    const delBtn=canDel&&!m.deleted?`<button class="msg-del-btn" onclick="deleteMessage('${roomId}',${idx})" title="Hapus pesan">🗑</button>`:'';
+    const bubbleContent=m.deleted?`<span class="msg-deleted">🚫 Pesan dihapus</span>`:escHtml(m.text);
+    if(m.deleted){
+      html+=`<div class="msg-row${mine?' mine':''}">
+        <div class="${avClass}" style="opacity:.4">${avContent}</div>
+        <div class="msg-content"><div class="msg-bubble" style="opacity:.5;font-style:italic">${bubbleContent}</div></div>
+      </div>`;
+    } else {
+      html+=`<div class="msg-row${mine?' mine':''}">
+        ${delBtn}
+        <div class="${avClass}">${avContent}</div>
+        <div class="msg-content">
+          ${!mine?`<div class="msg-name">${m.sender}${m.sender===OWNER?' 👑':isVipSender?' ⭐':' 🔐'}</div>`:''}
+          <div class="msg-bubble">${bubbleContent}</div>
+          <div class="msg-time">${time}</div>
+        </div>
+      </div>`;
+    }
+  });
+  container.innerHTML=html;
+  container.scrollTop=container.scrollHeight;
+}
+
+function deleteMessage(roomId, idx){
+  if(!currentUser) return;
+  if(!confirm('Hapus pesan ini untuk semua orang?')) return;
+  if(USE_FIREBASE && firebaseDB){
+    // Firebase: set deleted flag — for localStorage mode below
+  } else {
+    const key='mh_chat_'+roomId;
+    const msgs=JSON.parse(localStorage.getItem(key)||'[]');
+    if(msgs[idx]){ msgs[idx].deleted=true; msgs[idx].text=''; localStorage.setItem(key,JSON.stringify(msgs)); renderMessages(roomId,msgs); }
+  }
+}
+
+function escHtml(t){ const d=document.createElement('div'); d.textContent=t; return d.innerHTML; }
+
+function sendMessage(){
+  if(!activeRoom||!currentUser) return;
+  const inp=document.getElementById('chat-input');
+  const text=inp.value.trim(); if(!text) return;
+  const msg={ sender:currentUser.username, text, ts:Date.now() };
+  chatStorageSend(activeRoom, msg);
+  inp.value=''; inp.style.height='auto';
+}
+
+function handleChatKey(e){
+  if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); sendMessage(); }
+}
+
+function autoResize(el){
+  el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,100)+'px';
+}
+
+// ============================================================
+// VIP TANYA SYSTEM
+// ============================================================
+function getTanyas(){ try{ return JSON.parse(localStorage.getItem('mh_tanya')||'[]'); }catch(e){ return []; } }
+function saveTanyas(t){ localStorage.setItem('mh_tanya',JSON.stringify(t)); }
+
+function postTanya(){
+  if(!isVIP()) return;
+  const inp=document.getElementById('tanya-input');
+  const text=inp.value.trim(); if(!text){ alert('Tulis pertanyaanmu dulu!'); return; }
+  const tanyas=getTanyas();
+  tanyas.unshift({ id:Date.now(), sender:currentUser.username, text, ts:Date.now(), answers:[] });
+  saveTanyas(tanyas); inp.value=''; renderTanya();
+}
+
+function postJawaban(tanyaId){
+  if(!isVIP()) return;
+  const inp=document.getElementById('reply-'+tanyaId);
+  const text=inp.value.trim(); if(!text) return;
+  const tanyas=getTanyas();
+  const t=tanyas.find(t=>t.id===tanyaId);
+  if(t){ t.answers.push({ sender:currentUser.username, text, ts:Date.now() }); saveTanyas(tanyas); renderTanya(); }
+}
+
+function deleteTanya(tanyaId){
+  const tanyas=getTanyas();
+  const t=tanyas.find(t=>t.id===tanyaId);
+  if(!t) return;
+  if(t.sender!==currentUser?.username && !isAdmin()){ alert('Kamu tidak bisa hapus pertanyaan orang lain!'); return; }
+  if(!confirm('Hapus pertanyaan ini beserta semua jawabannya?')) return;
+  const idx=tanyas.findIndex(t=>t.id===tanyaId);
+  tanyas.splice(idx,1); saveTanyas(tanyas); renderTanya();
+}
+
+function deleteJawaban(tanyaId, ansIdx){
+  const tanyas=getTanyas();
+  const t=tanyas.find(t=>t.id===tanyaId);
+  if(!t) return;
+  const ans=t.answers[ansIdx];
+  if(ans.sender!==currentUser?.username && !isAdmin()){ alert('Kamu tidak bisa hapus jawaban orang lain!'); return; }
+  if(!confirm('Hapus jawaban ini?')) return;
+  t.answers.splice(ansIdx,1); saveTanyas(tanyas); renderTanya();
+}
+
+function renderTanya(){
+  const tanyas=getTanyas();
+  const list=document.getElementById('tanya-list');
+  if(!list) return;
+  if(!tanyas.length){
+    list.innerHTML=`<div class="tanya-empty"><div class="e-ico">❓</div><p>Belum ada pertanyaan. Jadilah yang pertama bertanya!</p></div>`;
+    return;
+  }
+  list.innerHTML=tanyas.map(t=>{
+    const ph=getPhoto(t.sender); const isVipQ=getVIPs().find(v=>v.username===t.sender);
+    const avContent=ph?`<img src="${ph}"/>`:t.sender[0].toUpperCase();
+    const canDelQ=t.sender===currentUser?.username||isAdmin();
+    const time=new Date(t.ts).toLocaleDateString('id-ID',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+    const answersHtml=t.answers.map((a,ai)=>{
+      const aph=getPhoto(a.sender); const aIsVip=getVIPs().find(v=>v.username===a.sender); const aIsOw=a.sender===OWNER;
+      const aAvContent=aph?`<img src="${aph}"/>`:a.sender[0].toUpperCase();
+      const aAvClass=aIsVip?'tanya-ans-av':'tanya-ans-av';
+      const aAvStyle=aIsVip?'background:linear-gradient(135deg,#f59e0b,#d97706);color:#000':'';
+      const badge=aIsOw?'<span class="tanya-ans-badge admin">👑 Owner</span>':aIsVip?'<span class="tanya-ans-badge vip">⭐ VIP</span>':'<span class="tanya-ans-badge admin">🔐 Admin</span>';
+      const aTime=new Date(a.ts).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
+      const canDelA=a.sender===currentUser?.username||isAdmin();
+      return `<div class="tanya-answer">
+        <div class="${aAvClass}" style="${aAvStyle}">${aAvContent}</div>
+        <div class="tanya-ans-body">
+          <div class="tanya-ans-meta"><span class="tanya-ans-name">${a.sender}</span>${badge}<span class="tanya-ans-time">${aTime}</span></div>
+          <div class="tanya-ans-text">${escHtml(a.text)}</div>
+        </div>
+        ${canDelA?`<button class="tanya-ans-del" onclick="deleteJawaban(${t.id},${ai})" title="Hapus jawaban">🗑</button>`:''}
+      </div>`;
+    }).join('');
+    return `<div class="tanya-card">
+      <div class="tanya-q">
+        <div class="tanya-q-header">
+          <div class="tanya-q-av">${avContent}</div>
+          <span class="tanya-q-name">⭐ ${t.sender}</span>
+          <span class="tanya-q-time">${time}</span>
+          ${canDelQ?`<button class="tanya-q-del" onclick="deleteTanya(${t.id})" title="Hapus pertanyaan">🗑</button>`:''}
+        </div>
+        <div class="tanya-q-text">${escHtml(t.text)}</div>
+      </div>
+      ${t.answers.length?`<div class="tanya-answers">${answersHtml}</div>`:''}
+      <div class="tanya-reply-box">
+        <input class="tanya-reply-input" id="reply-${t.id}" placeholder="Tulis jawaban..." onkeydown="if(event.key==='Enter')postJawaban(${t.id})"/>
+        <button class="btn-reply" onclick="postJawaban(${t.id})">Jawab ➤</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function switchVIPTab(btn, id){
+  document.querySelectorAll('.vip-stab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.vip-stab-panel').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('vstab-'+id).classList.add('active');
+}
+
+// VIP KONTEN
+function getVIPKonten(){ try{ return JSON.parse(localStorage.getItem('mh_vipkonten')||'[]'); }catch(e){ return []; } }
+function saveVIPKonten(d){ localStorage.setItem('mh_vipkonten',JSON.stringify(d)); }
+
+let vipKontenModal=null;
+function openVIPKontenModal(){
+  if(!isAdmin()) return;
+  document.getElementById('vkm').classList.add('open');
+}
+
+function saveVIPKonten2(){
+  if(!isAdmin()) return;
+  const title=document.getElementById('vk-title').value.trim();
+  if(!title){alert('Judul wajib!');return;}
+  const today=new Date().toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'});
+  const items=getVIPKonten();
+  items.unshift({
+    title, category:document.getElementById('vk-cat').value.trim()||'VIP',
+    desc:document.getElementById('vk-desc').value.trim()||'',
+    url:document.getElementById('vk-url').value.trim()||'',
+    emoji:document.getElementById('vk-emoji').value.trim()||'⭐',
+    date:today, addedBy:currentUser.username
+  });
+  saveVIPKonten(items);
+  document.getElementById('vkm').classList.remove('open');
+  ['vk-title','vk-cat','vk-desc','vk-url','vk-emoji'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  renderVIPKonten();
+}
+
+function deleteVIPKonten(i){
+  if(!isAdmin()){alert('Hanya admin!');return;}
+  const items=getVIPKonten();
+  if(confirm('Hapus konten VIP "'+items[i].title+'"?')){ items.splice(i,1); saveVIPKonten(items); renderVIPKonten(); }
+}
+
+function filterVIPKonten(val){
+  const q=String(val||'').toLowerCase();
+  const items=getVIPKonten().filter(i=>!q||i.title.toLowerCase().includes(q)||(i.desc||'').toLowerCase().includes(q));
+  renderVIPKontenItems(items);
+}
+
+function renderVIPKonten(){
+  const items=getVIPKonten();
+  const countEl=document.getElementById('count-vipkonten');
+  const addBtn=document.getElementById('add-vipkonten');
+  if(countEl) countEl.textContent=items.length+' item eksklusif';
+  if(addBtn) addBtn.style.display=isAdmin()?'flex':'none';
+  renderVIPKontenItems(items);
+  renderVIPInfo();
+}
+
+function renderVIPKontenItems(items){
+  const grid=document.getElementById('grid-vipkonten');
+  if(!grid) return;
+  if(!items.length){
+    grid.innerHTML=`<div class="empty" style="grid-column:1/-1"><div class="empty-icon">⭐</div><h3>Belum ada konten VIP</h3><p>${isAdmin()?'Tambah konten eksklusif untuk VIP':'Konten eksklusif akan segera tersedia'}</p></div>`;
+    return;
+  }
+  const adm=isAdmin();
+  grid.innerHTML=items.map((item,i)=>`<div class="vip-konten-card">
+    <div class="vkc-thumb">${item.emoji||'⭐'}</div>
+    <div class="vkc-body">
+      <span class="vkc-tag">${item.category||'VIP'}</span>
+      <div class="vkc-title">${item.title}</div>
+      ${item.desc?`<div class="vkc-desc">${item.desc}</div>`:''}
+      <div class="vkc-foot">
+        <span class="vkc-date">${item.date}</span>
+        <div style="display:flex;gap:5px">
+          ${item.url?`<button class="card-btn" onclick="window.open('${item.url}','_blank')">🔗</button>`:''}
+          ${adm?`<button class="card-btn del" onclick="deleteVIPKonten(${i})">🗑</button>`:''}
+        </div>
+      </div>
+    </div>
+  </div>`).join('');
+}
+
+function renderVIPInfo(){
+  const vips=getVIPs(), tanyas=getTanyas(), konten=getVIPKonten();
+  const el=id=>document.getElementById(id);
+  if(el('info-vip-count')) el('info-vip-count').textContent=vips.length;
+  if(el('info-tanya-count')) el('info-tanya-count').textContent=tanyas.length;
+  if(el('info-konten-count')) el('info-konten-count').textContent=konten.length;
+  if(el('vip-member-list-display')){
+    el('vip-member-list-display').innerHTML=vips.length?vips.map(v=>{
+      const ph=getPhoto(v.username);
+      return `<div class="admin-item" style="margin-bottom:8px">
+        <div class="admin-item-av vip">${ph?`<img src="${ph}"/>`:(v.username[0].toUpperCase())}</div>
+        <div class="admin-item-info"><div class="admin-item-name">⭐ ${v.username}</div><div class="admin-item-sub">Member VIP</div></div>
+      </div>`;
+    }).join(''):'<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px">Belum ada member VIP</div>';
+  }
+}
+
+// ============================================================
+// CONTENT DATA
+// ============================================================
+const COLORS={youtube:'yt',script:'sc',summit:'sm',social:'so',scriptvip:'sc',summitvip:'sm'};
+const LABELS={youtube:'Video YouTube',script:'Script',summit:'Summit Kit',social:'Media Sosial',scriptvip:'Script VIP',summitvip:'Summit VIP'};
+const ICONS={youtube:'▶',script:'📝',summit:'🏔',social:'✦',scriptvip:'📜',summitvip:'🏔'};
+const SAVC={youtube:'#ff2d55',script:'#00e5ff',summit:'#a855f7',social:'#34d399'};
+const SAVT={youtube:'#fff',script:'#000',summit:'#fff',social:'#000'};
+
+let data={youtube:[],script:[],summit:[],social:[],scriptvip:[],summitvip:[]};
+let currentTab='youtube';
+try{
+  const s=localStorage.getItem('mediahub');
+  if(s){
+    const parsed=JSON.parse(s);
+    // Migration: pastikan field baru selalu ada
+    data={
+      youtube: parsed.youtube||[],
+      script:  parsed.script||[],
+      summit:  parsed.summit||[],
+      social:  parsed.social||[],
+      scriptvip:  parsed.scriptvip||[],
+      summitvip:  parsed.summitvip||[]
+    };
+  }
+}catch(e){}
+function save(){try{localStorage.setItem('mediahub',JSON.stringify(data));}catch(e){}}
+
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    currentTab=btn.dataset.tab;
+    const panel=document.getElementById('panel-'+currentTab);
+    if(panel) panel.classList.add('active');
+  });
+});
+
+function renderAll(){
+  ['youtube','script','summit','social','scriptvip','summitvip'].forEach(tab=>renderGrid(tab));
+}
+
+function renderGrid(tab, filter=''){
+  filter = String(filter||'').toLowerCase();
+  const adm = isAdmin();
+  const grid = document.getElementById('grid-'+tab);
+  if(!grid) return;
+  const countEl = document.getElementById('count-'+tab);
+  const items = data[tab].filter(i=>!filter||i.title.toLowerCase().includes(filter)||(i.desc||'').toLowerCase().includes(filter));
+  if(countEl) countEl.textContent = data[tab].length + ' item';
+  if(!items.length){
+    grid.innerHTML = `<div class="empty"><div class="empty-icon">${ICONS[tab]}</div><h3>${filter?'Tidak ditemukan':'Belum ada item'}</h3><p>${filter?'Coba kata kunci lain':adm?'Klik Tambah untuk mulai':'Belum ada konten'}</p></div>`;
+    return;
+  }
+  grid.innerHTML = items.map(item=>{
+    const cls = COLORS[tab]; const ri = data[tab].indexOf(item);
+    if(tab==='summit'||tab==='summitvip') return `<div class="card">
+      <div class="card-thumb" style="aspect-ratio:unset;min-height:64px;font-size:40px;padding:12px 0">${item.emoji||'🏔'}</div>
+      <div class="card-body">
+        <span class="card-tag sm">${item.category||'Kit'}</span>
+        <h3 style="word-break:break-all;margin-bottom:8px">${item.title}</h3>
+        <div class="summit-info-grid">
+          ${item.creator?`<div class="summit-info-row"><span class="s-label">👤 Creator</span><span class="s-val">${item.creator}</span></div>`:''}
+          ${item.idasset?`<div class="summit-info-row"><span class="s-label">🔖 ID Asset</span><span class="s-val">${item.idasset}</span></div>`:''}
+          ${item.desc?`<div class="summit-info-row"><span class="s-label">💬 Pesan</span><span class="s-val">${item.desc}</span></div>`:''}
+        </div>
+        ${item.fileData?`<div class="file-action-row"><button class="summit-file-btn" onclick="downloadFile(${ri})">⬇ ${item.fileData.name}</button>${adm?`<button class="file-del-btn" onclick="deleteFile(${ri})" title="Hapus file">✕</button>`:''}</div>`:''}
+        <div class="card-meta"><span class="card-date">${item.date}</span><div class="card-actions">${adm?`<button class="card-btn del" onclick="deleteItem('${tab}',${ri})">🗑 Hapus</button>`:''}</div></div>
+        ${item.addedBy?`<div class="added-by">oleh ${item.addedBy}</div>`:''}
+      </div></div>`;
+    return `<div class="card">
+      <div class="card-thumb">${item.emoji||ICONS[tab]}</div>
+      <div class="card-body">
+        <span class="card-tag ${cls}">${item.category||LABELS[tab]}</span>
+        <h3>${item.title}</h3>
+        ${item.desc?`<p>${item.desc}</p>`:''}
+        <div class="card-meta"><span class="card-date">${item.date}</span><div class="card-actions">
+          ${item.url?`<button class="card-btn" onclick="window.open('${item.url}','_blank')">🔗</button>`:''}
+          ${adm?`<button class="card-btn del" onclick="deleteItem('${tab}',${ri})">🗑 Hapus</button>`:''}
+        </div></div>
+        ${item.addedBy?`<div class="added-by">oleh ${item.addedBy}</div>`:''}
+      </div></div>`;
+  }).join('');
+}
+
+function filterCards(tab,val){renderGrid(tab,val||'');}
+
+const modalForms={
+  youtube:`<div class="form-group"><label>Judul Video</label><input id="f-title" placeholder="Nama video..."/></div><div class="form-group"><label>URL YouTube</label><input id="f-url" placeholder="https://youtube.com/watch?v=..."/></div><div class="form-group"><label>Kategori</label><input id="f-cat" placeholder="Tutorial, Vlog, Review..."/></div><div class="form-group"><label>Deskripsi</label><textarea id="f-desc" placeholder="Deskripsi singkat..."></textarea></div><div class="form-group"><label>Emoji</label><input id="f-emoji" placeholder="🎬" maxlength="4"/></div>`,
+  script:`<div class="form-group"><label>Judul Script</label><input id="f-title" placeholder="Nama script..."/></div><div class="form-group"><label>Kategori</label><input id="f-cat" placeholder="Opening, Hook, CTA..."/></div><div class="form-group"><label>Isi Script</label><textarea id="f-desc" placeholder="Tulis atau paste script..." style="min-height:110px"></textarea></div><div class="form-group"><label>Emoji</label><input id="f-emoji" placeholder="📜" maxlength="4"/></div><div class="form-group"><label>Tipe Konten</label><div style="display:flex;gap:10px;margin-top:6px"><label style="display:flex;align-items:center;gap:8px;cursor:pointer;flex:1;background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.25);border-radius:10px;padding:10px 14px"><input type="radio" name="f-prem" id="f-prem-free" value="free" checked style="accent-color:#34d399"/> <span style="color:#34d399;font-weight:700">🆓 Gratis</span></label><label style="display:flex;align-items:center;gap:8px;cursor:pointer;flex:1;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:10px;padding:10px 14px"><input type="radio" name="f-prem" id="f-prem-vip" value="vip" style="accent-color:#f59e0b"/> <span style="color:#f59e0b;font-weight:700">⭐ VIP</span></label></div></div>`,
+  summit:`<div class="summit-msg-tabs"><button class="smtab active" onclick="switchSMTab(this,'nama')">🏔 Nama Kit</button><button class="smtab" onclick="switchSMTab(this,'creator')">👤 Creator</button><button class="smtab" onclick="switchSMTab(this,'idasset')">🔖 ID Asset</button><button class="smtab" onclick="switchSMTab(this,'pesan')">💬 Pesan</button></div><div class="smtab-panel active" id="smtab-nama"><div class="form-group"><label>Nama Summit Kit</label><input id="f-nama" placeholder="Nama kit..."/></div></div><div class="smtab-panel" id="smtab-creator"><div class="form-group"><label>Creator</label><input id="f-creator" placeholder="Nama creator..."/></div></div><div class="smtab-panel" id="smtab-idasset"><div class="form-group"><label>ID Asset</label><input id="f-idasset" placeholder="ID atau kode..."/></div></div><div class="smtab-panel" id="smtab-pesan"><div class="form-group"><label>Pesan</label><textarea id="f-desc" placeholder="Catatan..." style="min-height:90px"></textarea></div></div><div class="form-group" style="margin-top:6px"><label>Upload File (opsional)</label><div class="file-drop-zone" id="file-drop-zone" onclick="document.getElementById('f-file').click()"><div class="fdz-icon">📁</div><div class="fdz-text">Klik atau drag & drop</div><div class="fdz-sub" id="file-name-display">Semua jenis file</div><input type="file" id="f-file" style="display:none" onchange="handleFileSelect(this)"/></div></div><div class="form-group"><label>Tipe Konten</label><div style="display:flex;gap:10px;margin-top:6px"><label style="display:flex;align-items:center;gap:8px;cursor:pointer;flex:1;background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.25);border-radius:10px;padding:10px 14px"><input type="radio" name="f-prem" id="f-prem-free" value="free" checked style="accent-color:#34d399"/> <span style="color:#34d399;font-weight:700">🆓 Gratis</span></label><label style="display:flex;align-items:center;gap:8px;cursor:pointer;flex:1;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:10px;padding:10px 14px"><input type="radio" name="f-prem" id="f-prem-vip" value="vip" style="accent-color:#f59e0b"/> <span style="color:#f59e0b;font-weight:700">⭐ VIP</span></label></div></div>`,
+  social:`<div class="form-group"><label>Judul Konten</label><input id="f-title" placeholder="Nama konten..."/></div><div class="form-group"><label>Platform</label><input id="f-cat" placeholder="Instagram, TikTok, Twitter..."/></div><div class="form-group"><label>Link Konten</label><input id="f-url" placeholder="https://..."/></div><div class="form-group"><label>Caption</label><textarea id="f-desc" placeholder="Caption..."></textarea></div><div class="form-group"><label>Emoji</label><input id="f-emoji" placeholder="📸" maxlength="4"/></div>`,
+  scriptvip:`<div class="form-group"><label>Judul Script VIP</label><input id="f-title" placeholder="Nama script VIP..."/></div><div class="form-group"><label>Kategori</label><input id="f-cat" placeholder="Opening, Hook, CTA..."/></div><div class="form-group"><label>Isi Script</label><textarea id="f-desc" placeholder="Tulis atau paste script..." style="min-height:110px"></textarea></div><div class="form-group"><label>Emoji</label><input id="f-emoji" placeholder="📜" maxlength="4"/></div>`,
+  summitvip:`<div class="summit-msg-tabs"><button class="smtab active" onclick="switchSMTab(this,'nama')">🏔 Nama Kit</button><button class="smtab" onclick="switchSMTab(this,'creator')">👤 Creator</button><button class="smtab" onclick="switchSMTab(this,'idasset')">🔖 ID Asset</button><button class="smtab" onclick="switchSMTab(this,'pesan')">💬 Pesan</button></div><div class="smtab-panel active" id="smtab-nama"><div class="form-group"><label>Nama Summit Kit VIP</label><input id="f-nama" placeholder="Nama kit..."/></div></div><div class="smtab-panel" id="smtab-creator"><div class="form-group"><label>Creator</label><input id="f-creator" placeholder="Nama creator..."/></div></div><div class="smtab-panel" id="smtab-idasset"><div class="form-group"><label>ID Asset</label><input id="f-idasset" placeholder="ID atau kode..."/></div></div><div class="smtab-panel" id="smtab-pesan"><div class="form-group"><label>Pesan</label><textarea id="f-desc" placeholder="Catatan..." style="min-height:90px"></textarea></div></div><div class="form-group" style="margin-top:6px"><label>Upload File (opsional)</label><div class="file-drop-zone" id="file-drop-zone" onclick="document.getElementById('f-file').click()"><div class="fdz-icon">📁</div><div class="fdz-text">Klik atau drag & drop</div><div class="fdz-sub" id="file-name-display">Semua jenis file</div><input type="file" id="f-file" style="display:none" onchange="handleFileSelect(this)"/></div></div>`
+};
+
+let selectedFile=null;
+
+function handleFileSelect(inp){
+  const file=inp.files[0];if(!file)return;
+  const zone=document.getElementById('file-drop-zone');
+  const sz=file.size>1024*1024?(file.size/1024/1024).toFixed(1)+' MB':(file.size/1024).toFixed(0)+' KB';
+  document.getElementById('file-name-display').textContent=file.name+' ('+sz+')';
+  zone.classList.add('has-file');
+  zone.querySelector('.fdz-icon').textContent='✅';
+  zone.querySelector('.fdz-text').textContent='File terpilih!';
+  const r=new FileReader();
+  r.onload=e=>{selectedFile={name:file.name,size:file.size,type:file.type,base64:e.target.result};};
+  r.readAsDataURL(file);
+}
+
+function setupDragDrop(){
+  const zone=document.getElementById('file-drop-zone');if(!zone)return;
+  zone.addEventListener('dragover',e=>{e.preventDefault();zone.classList.add('dragover');});
+  zone.addEventListener('dragleave',()=>zone.classList.remove('dragover'));
+  zone.addEventListener('drop',e=>{e.preventDefault();zone.classList.remove('dragover');const f=e.dataTransfer.files[0];if(f){const i=document.getElementById('f-file');const d=new DataTransfer();d.items.add(f);i.files=d.files;handleFileSelect(i);}});
+}
+
+function switchSMTab(btn,id){
+  document.querySelectorAll('.smtab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.smtab-panel').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('smtab-'+id).classList.add('active');
+}
+
+function openModal(tab){
+  if(!isAdmin())return;
+  currentTab=tab;selectedFile=null;
+  document.getElementById('modal-title').textContent='＋ Tambah '+LABELS[tab];
+  document.getElementById('modal-body').innerHTML=modalForms[tab];
+  const btn=document.getElementById('btn-save-item');
+  btn.style.background=SAVC[tab];btn.style.color=SAVT[tab];
+  document.getElementById('modal').classList.add('open');
+  if(tab==='summit')setTimeout(setupDragDrop,50);
+}
+
+function closeModal(){document.getElementById('modal').classList.remove('open');selectedFile=null;}
+
+function saveItem(){
+  if(!isAdmin())return;
+  const today=new Date().toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'});
+  if(currentTab==='summit'||currentTab==='summitvip'){
+    const nama=document.getElementById('f-nama')?.value.trim()||'';
+    const creator=document.getElementById('f-creator')?.value.trim()||'';
+    const idasset=document.getElementById('f-idasset')?.value.trim()||'';
+    const desc=document.getElementById('f-desc')?.value.trim()||'';
+    if(!nama&&!creator&&!idasset&&!desc&&!selectedFile){alert('Isi minimal satu field!');return;}
+    data[currentTab].unshift({title:nama||(selectedFile?selectedFile.name:'Summit Kit'),creator,idasset,desc,category:selectedFile?selectedFile.name.split('.').pop().toUpperCase():'Kit',emoji:selectedFile?getFileEmoji(selectedFile.type):'🏔',date:today,fileData:selectedFile||null,addedBy:currentUser.username});
+    save();renderAll();closeModal();return;
+  }
+  const title=document.getElementById('f-title')?.value.trim();
+  if(!title){alert('Judul wajib diisi!');return;}
+  data[currentTab].unshift({title,url:document.getElementById('f-url')?.value.trim()||'',category:document.getElementById('f-cat')?.value.trim()||LABELS[currentTab],desc:document.getElementById('f-desc')?.value.trim()||'',emoji:document.getElementById('f-emoji')?.value.trim()||ICONS[currentTab],date:today,addedBy:currentUser.username});
+  save();renderAll();closeModal();
+}
+
+function getFileEmoji(t){
+  if(!t)return'📎';
+  if(t.startsWith('image/'))return'🖼️';if(t.startsWith('video/'))return'🎬';if(t.startsWith('audio/'))return'🎵';
+  if(t.includes('pdf'))return'📄';if(t.includes('zip')||t.includes('rar'))return'🗜️';
+  if(t.includes('word')||t.includes('document'))return'📝';if(t.includes('sheet')||t.includes('excel'))return'📊';
+  return'📎';
+}
+
+function downloadFile(idx){const tab=currentTab==='summitvip'?'summitvip':'summit';const item=data[tab][idx];if(!item?.fileData)return;const a=document.createElement('a');a.href=item.fileData.base64;a.download=item.fileData.name;a.click();}
+function deleteFile(idx){if(!isAdmin())return;const tab=currentTab==='summitvip'?'summitvip':'summit';if(confirm('Hapus file? Item tetap tersimpan.')){data[tab][idx].fileData=null;save();renderAll();}}
+function deleteItem(tab,idx){if(!isAdmin())return;const item=data[tab][idx];if(confirm('Hapus "'+item.title+'"?')){data[tab].splice(idx,1);save();renderAll();}}
+
+// Seed data
+if(!data.youtube.length&&!data.script.length){
+  data.youtube=[{title:'Tutorial Editing Video Pemula',url:'https://youtube.com',category:'Tutorial',desc:'Panduan lengkap editing video dari nol.',emoji:'🎬',date:'1 Mar 2026',addedBy:'DaFz'},{title:'Vlog: Eksplorasi Kota Tua',url:'https://youtube.com',category:'Vlog',desc:'Journey seru keliling Kota Tua.',emoji:'🎥',date:'28 Feb 2026',addedBy:'DaFz'}];
+  data.script=[
+    {title:'Hook Pembuka Gratis',url:'',category:'Hook',desc:'Script pembuka gratis untuk semua creator!',emoji:'🎙️',date:'1 Mar 2026',addedBy:'DaFz'},
+    {title:'Script Viral VIP',url:'',category:'Viral',desc:'Script eksklusif yang sudah terbukti viral.',emoji:'🔥',date:'1 Mar 2026',addedBy:'DaFz'}
+  ];
+  data.summit=[
+    {title:'LUT Pack Free',creator:'DaFz',idasset:'AST-000',desc:'5 LUT gratis untuk semua.',category:'LUT',emoji:'🎨',date:'1 Mar 2026',fileData:null,addedBy:'DaFz'},
+    {title:'LUT Pack Cinema VIP',creator:'DaFz',idasset:'AST-001',desc:'20 LUT premium untuk tampilan sinematik.',category:'LUT',emoji:'🏆',date:'1 Mar 2026',fileData:null,addedBy:'DaFz'}
+  ];
+  data.scriptvip=[{title:'Script Viral Eksklusif',url:'',category:'Viral',desc:'Script rahasia yang sudah terbukti viral berkali-kali.',emoji:'🔥',date:'1 Mar 2026',addedBy:'DaFz'}];
+  data.summitvip=[{title:'LUT Pack Cinema Premium',creator:'DaFz',idasset:'AST-VIP-01',desc:'20 LUT eksklusif untuk tampilan sinematik.',category:'LUT',emoji:'🏆',date:'1 Mar 2026',fileData:null,addedBy:'DaFz'}];
+  data.social=[{title:'Carousel Tips Creator',url:'https://instagram.com',category:'Instagram',desc:'10 tips jadi content creator sukses.',emoji:'📸',date:'1 Mar 2026',addedBy:'DaFz'}];
+  save();
+}
+</script>
+</body>
+</html>
